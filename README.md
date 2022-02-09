@@ -3,14 +3,12 @@ Python implementation of soft body modelling paradigms.
 
 ## Voxel-based soft body
 [![Watch the video](https://img.youtube.com/vi/OUvCSRjbirM/maxresdefault.jpg)](https://youtu.be/OUvCSRjbirM)
+Click for video.
 
 ## Pressure-based soft body
-<video autoplay="autoplay" loop="loop" width="400" height="300">
-  <source src="./img/pressure.mp4" type="video/mp4" />
-</video>
+[![Watch the video](https://img.youtube.com/vi/ySqMv0BndtQ/maxresdefault.jpg)](https://youtu.be/ySqMv0BndtQ)
+Click for video.
 
 ## Tensegrity-based soft body
-<video autoplay="autoplay" loop="loop" width="400" height="300">
-  <source src="./img/tensegrity.mp4" type="video/mp4" />
-  <img src="./img/tensegrity.png">
-</video>
+[![Watch the video](https://img.youtube.com/vi/HeMh7DPbmWU/maxresdefault.jpg)](https://youtu.be/HeMh7DPbmWU)
+Click for video.
