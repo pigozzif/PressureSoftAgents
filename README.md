@@ -14,4 +14,5 @@ Python implementation of soft body modelling paradigms.
 ## Tensegrity-based soft body
 <video autoplay="autoplay" loop="loop" width="400" height="300">
   <source src="./img/tensegrity.mp4" type="video/mp4" />
+  <img src="./img/tensegrity.png">
 </video>
