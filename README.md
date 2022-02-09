@@ -2,7 +2,7 @@
 Python implementation of soft body modelling paradigms.
 
 ## Voxel-based soft body
-![Voxel-based soft body](./img/voxel.gif)
+<img src="./img/voxel.gif" width=50>
 
 ## Pressure-based soft body
 ![Pressure-based soft body](./img/pressure.gif)
