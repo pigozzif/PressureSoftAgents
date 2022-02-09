@@ -5,7 +5,7 @@ Python implementation of soft body modelling paradigms.
 <img src="./img/voxel.gif" width=500>
 
 ## Pressure-based soft body
-![Pressure-based soft body](./img/pressure.gif)
+<img src="./img/pressure.gif" width=500>
 
 ## Tensegrity-based soft body
-![Tensegrity-based soft body](./img/tensegrity.gif)
+<img src="./img/tensegrity.gif" width=500>
