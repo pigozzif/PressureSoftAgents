@@ -2,7 +2,9 @@
 Python implementation of soft body modelling paradigms.
 
 ## Voxel-based soft body
-<img src="./img/voxel.gif" width=500>
+<video autoplay="autoplay" loop="loop" width="400" height="300">
+  <source src="./imgs/voxel.mp4" type="video/mp4" />
+</video>
 
 ## Pressure-based soft body
 <img src="./img/pressure.gif" width=500>
