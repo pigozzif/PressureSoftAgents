@@ -1,7 +1,4 @@
 import abc
-import math
-
-from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape
 
 
 class SoftBody(abc.ABC):
