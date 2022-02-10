@@ -17,8 +17,8 @@ class PressureSoftBody(SoftBody):
     T = 298
     nRT = n * R * T
 
-    def __init__(self, world, min_x, max_x):
-        super(PressureSoftBody, self).__init__(world, min_x, max_x)
+    def __init__(self, world):
+        super(PressureSoftBody, self).__init__(world)
         fixture = b2FixtureDef(shape=b2CircleShape(radius=1),
                                density=5000, friction=0.2)
         self.masses = []

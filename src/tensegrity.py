@@ -82,8 +82,8 @@ class TensegritySoftBody(SoftBody):
     n_bodies_y = 2
     module_size = 2.5
 
-    def __init__(self, world, min_x, max_x):
-        super(TensegritySoftBody, self).__init__(world, min_x, max_x)
+    def __init__(self, world):
+        super(TensegritySoftBody, self).__init__(world)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
         self.modules = {}

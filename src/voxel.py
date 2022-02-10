@@ -86,8 +86,8 @@ class VoxelSoftBody(SoftBody):
     n_bodies_y = 5
     voxel_size = 5
 
-    def __init__(self, world, min_x, max_x):
-        super(VoxelSoftBody, self).__init__(world, min_x, max_x)
+    def __init__(self, world):
+        super(VoxelSoftBody, self).__init__(world)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
         # initialize voxels
