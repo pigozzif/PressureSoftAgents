@@ -1,21 +1,9 @@
 import math
 
-from Box2D import b2FixtureDef, b2PolygonShape, b2EdgeShape, b2DistanceJointDef, b2CircleShape
-from Box2D.examples.framework import Framework, main
-from enum import Enum
+from Box2D import b2FixtureDef, b2DistanceJointDef, b2CircleShape
+from Box2D.examples.framework import main
 
-
-class Direction(Enum):
-    N = (0, 1)
-    NE = (1, 1)
-    SE = (1, -1)
-    S = (0, -1)
-    SW = (-1, -1)
-    NW = (-1, 1)
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+from src.soft_body import SoftBody
 
 
 class TensegrityModule(object):
@@ -86,7 +74,7 @@ class TensegrityModule(object):
         return self.world.CreateJoint(dfn)
 
 
-class TensegrityBased(Framework):
+class TensegritySoftBody(SoftBody):
     name = "Tensegrity-based soft body"
     description = "Demonstration of a tensegrity-based soft body simulation."
     n_modules = 2
@@ -94,14 +82,8 @@ class TensegrityBased(Framework):
     n_bodies_y = 2
     module_size = 2.5
 
-    def __init__(self):
-        super(TensegrityBased, self).__init__()
-
-        # The ground
-        self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-100, -100), (100, -100)])
-        )
-        self._create_obstacles()
+    def __init__(self, world, min_x, max_x):
+        super(TensegritySoftBody, self).__init__(world, min_x, max_x)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
         self.modules = {}
@@ -111,36 +93,9 @@ class TensegrityBased(Framework):
                 self.modules[(x, y)] = TensegrityModule(pos_x, pos_y, self.world, fixture, self.module_size,
                                                         self.modules)
 
-    def _create_obstacles(self):
-        box1 = self.world.CreateStaticBody(
-            position=(0, -15),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(25.0, 2.5)),
-                                  ))
-        box1.fixedRotation = True
-        box1.angle = -25 * math.pi / 180.0
-
-        box2 = self.world.CreateStaticBody(
-            position=(55, -45),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(20.0, 2.5)),
-                                  ))
-        box2.fixedRotation = True
-        box2.angle = 45 * math.pi / 180.0
-
-        box3 = self.world.CreateStaticBody(
-            position=(0, -100),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(vertices=[(-50, 0.0),
-                                                                 (0, 0.0),
-                                                                 (-45, 20),
-                                                                 ]
-                                                       )))
-        box3.fixedRotation = True
+    def physics_step(self):
+        pass
 
 
 if __name__ == "__main__":
-    main(TensegrityBased)
+    main(TensegritySoftBody)

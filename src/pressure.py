@@ -1,13 +1,14 @@
 import math
 
 import numpy as np
-from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape, b2CircleShape, b2DistanceJointDef, \
-    b2Vec2
-from Box2D.examples.framework import Framework, main
+from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
+from Box2D.examples.framework import main
 import matplotlib.path as path
 
+from src.soft_body import SoftBody
 
-class PressureBased(Framework):
+
+class PressureSoftBody(SoftBody):
     name = "Pressure-based Soft Body"
     description = "Demonstration of a pressure-based soft body simulation."
     n_masses = 25
@@ -17,15 +18,8 @@ class PressureBased(Framework):
     T = 298
     nRT = n * R * T
 
-    def __init__(self):
-        super(PressureBased, self).__init__()
-
-        # The ground
-        self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-100, -100), (100, -100)]),
-        )
-        self._create_obstacles()
-
+    def __init__(self, world, min_x, max_x):
+        super(PressureSoftBody, self).__init__(world, min_x, max_x)
         fixture = b2FixtureDef(shape=b2CircleShape(radius=1),
                                density=5000, friction=0.2)
         self.masses = []
@@ -71,7 +65,7 @@ class PressureBased(Framework):
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
                              for ((x0, y0), (x1, y1)) in zip(positions, positions[1:] + [positions[0]])))
 
-    def apply_pressure(self):
+    def physics_step(self):
         positions = [mass.position for mass in self.masses]
         area = self._get_area(positions)
         polygon = path.Path(np.array(positions))
@@ -85,40 +79,6 @@ class PressureBased(Framework):
             mass_a.ApplyForceToCenter(pressure_force, True)
             mass_b.ApplyForceToCenter(pressure_force, True)
 
-    def _create_obstacles(self):
-        box1 = self.world.CreateStaticBody(
-            position=(0, -15),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(25.0, 2.5)),
-                                  ))
-        box1.fixedRotation = True
-        box1.angle = -25 * math.pi / 180.0
-
-        box2 = self.world.CreateStaticBody(
-            position=(55, -45),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(20.0, 2.5)),
-                                  ))
-        box2.fixedRotation = True
-        box2.angle = 45 * math.pi / 180.0
-
-        box3 = self.world.CreateStaticBody(
-            position=(0, -100),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(vertices=[(-50, 0.0),
-                                                                 (0, 0.0),
-                                                                 (-45, 20),
-                                                                 ]
-                                                       )))
-        box3.fixedRotation = True
-
-    def Step(self, settings):
-        Framework.Step(self, settings)
-        self.apply_pressure()
-
 
 if __name__ == "__main__":
-    main(PressureBased)
+    main(PressureSoftBody)

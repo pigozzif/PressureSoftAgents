@@ -1,8 +1,7 @@
-import math
+from Box2D.examples.framework import main
+from Box2D import (b2DistanceJointDef, b2FixtureDef, b2CircleShape)
 
-from Box2D.examples.framework import (Framework, Keys, main)
-from Box2D import (b2DistanceJointDef, b2EdgeShape, b2FixtureDef,
-                   b2PolygonShape, b2CircleShape)
+from src.soft_body import SoftBody
 
 
 class Voxel(object):
@@ -78,7 +77,7 @@ class Voxel(object):
         return joints
 
 
-class VoxelBased(Framework):
+class VoxelSoftBody(SoftBody):
     name = "Voxel-based soft body"
     description = "Demonstration of a voxel-based soft body simulation."
     voxels = []
@@ -87,18 +86,10 @@ class VoxelBased(Framework):
     n_bodies_y = 5
     voxel_size = 5
 
-    def __init__(self):
-        super(VoxelBased, self).__init__()
-
-        # The ground
-        self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-100, -100), (100, -100)])
-        )
-        self._create_obstacles()
-
+    def __init__(self, world, min_x, max_x):
+        super(VoxelSoftBody, self).__init__(world, min_x, max_x)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
-
         # initialize voxels
         self.voxels = {}
         for x in range(self.n_bodies_x + 1):
@@ -107,63 +98,9 @@ class VoxelBased(Framework):
                 self.voxels[(x, y)] = Voxel(pos_x, pos_y + 1, self.voxel_size, self.world, fixture, self.voxels,
                                             self.n_bodies_x, self.n_bodies_y)
 
-    def _create_obstacles(self):
-        box1 = self.world.CreateStaticBody(
-            position=(0, -15),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(25.0, 2.5)),
-                                  ))
-        box1.fixedRotation = True
-        box1.angle = -25 * math.pi / 180.0
-
-        box2 = self.world.CreateStaticBody(
-            position=(55, -45),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(20.0, 2.5)),
-                                  ))
-        box2.fixedRotation = True
-        box2.angle = 45 * math.pi / 180.0
-
-        box3 = self.world.CreateStaticBody(
-            position=(25, -100),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(vertices=[(-25, 0.0),
-                                                                 (25, 0.0),
-                                                                 (-20, 20),
-                                                                 ]
-                                                       )))
-        box3.fixedRotation = True
-
-    def Keyboard(self, key):
-        if key == Keys.K_b:
-            for voxel in self.voxels.values():
-                for body in voxel.masses.values():
-                    # Gets both FixtureDestroyed and JointDestroyed callbacks.
-                    self.world.DestroyBody(body)
-                    break
-
-        elif key == Keys.K_j:
-            for joint in self.joints:
-                # Does not get a JointDestroyed callback!
-                self.world.DestroyJoint(joint)
-                self.joints.remove(joint)
-                break
-
-    def FixtureDestroyed(self, fixture):
-        super(VoxelBased, self).FixtureDestroyed(fixture)
-        body = fixture.body
-        for voxel in self.voxels.values():
-            for k, v in voxel.masses.items():
-                if body is v:
-                    del voxel.masses[k]
-
-    def JointDestroyed(self, joint):
-        if joint in self.joints:
-            self.joints.remove(joint)
+    def physics_step(self):
+        pass
 
 
 if __name__ == "__main__":
-    main(VoxelBased)
+    main(VoxelSoftBody)
