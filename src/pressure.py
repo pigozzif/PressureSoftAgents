@@ -84,3 +84,6 @@ class PressureSoftBody(SoftBody):
 
     def sense(self):
         return np.array([min(len(mass.contacts), 1) for mass in self.masses])
+
+    def get_center_of_mass(self):
+        return np.mean([mass.position for mass in self.masses], axis=0)

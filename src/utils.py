@@ -1,10 +1,17 @@
 import math
+import random
 
+import numpy as np
 from Box2D import b2FixtureDef, b2PolygonShape, b2EdgeShape
 
 from src.pressure import PressureSoftBody
 from src.tensegrity import TensegritySoftBody
 from src.voxel import VoxelSoftBody
+
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
 
 
 def create_soft_body(name, world):

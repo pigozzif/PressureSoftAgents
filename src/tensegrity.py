@@ -97,4 +97,9 @@ class TensegritySoftBody(SoftBody):
         pass
 
     def sense(self):
-        return np.array([[min(len(mass.contacts), 1) for mass in module.masses] for module in self.modules.values()]).flatten()
+        return np.array(
+            [[min(len(mass.contacts), 1) for mass in module.masses] for module in self.modules.values()]).flatten()
+
+    def get_center_of_mass(self):
+        return np.mean([np.mean([mass.position for mass in module.masses], axis=0) for module in self.modules.values()],
+                       axis=0)

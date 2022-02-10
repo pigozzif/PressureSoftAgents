@@ -13,3 +13,7 @@ class SoftBody(abc.ABC):
     @abc.abstractmethod
     def sense(self):
         pass
+
+    @abc.abstractmethod
+    def get_center_of_mass(self):
+        pass
