@@ -16,6 +16,7 @@ class SoftBodyFramework(Framework):
         self.soft_body.create_test_obstacles()
         self.name = self.soft_body.name
         self.description = self.soft_body.description
+        help(self.world.contactListener)
 
     def Step(self, settings):
         Framework.Step(self, settings)

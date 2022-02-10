@@ -28,14 +28,18 @@ class PressureSoftBody(SoftBody):
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
         theta = 0
+        prev_mass = None
         for i in range(self.n_masses):
             x = self.r * math.cos(theta)
             y = self.r * math.sin(theta)
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
             mass.angle = theta
-            self._add_joint(self.masses[i], self.masses[(i + 1) % len(self.masses)])
+            if prev_mass is not None:
+                self._add_joint(prev_mass, mass)
             theta += delta_theta
             self.masses.append(mass)
+            prev_mass = mass
+        self._add_joint(prev_mass, self.masses[0])
 
     def _add_joint(self, mass, prev_mass):
         dfn = b2DistanceJointDef(
@@ -44,7 +48,7 @@ class PressureSoftBody(SoftBody):
             anchorA=prev_mass.position,
             anchorB=mass.position,
             dampingRatio=0.5,
-            collideConnected=True
+            collideConnected=False
         )
         self.joints.append(self.world.CreateJoint(dfn))
 
@@ -77,3 +81,6 @@ class PressureSoftBody(SoftBody):
             pressure_force = normal * pressure
             mass_a.ApplyForceToCenter(pressure_force, True)
             mass_b.ApplyForceToCenter(pressure_force, True)
+
+    def sense(self):
+        return np.array([min(len(mass.contacts), 1) for mass in self.masses])

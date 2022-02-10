@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 from Box2D import b2FixtureDef, b2DistanceJointDef, b2CircleShape
 
 from soft_body import SoftBody
@@ -49,7 +50,7 @@ class TensegrityModule(object):
             anchorB=mass_b.position,
             frequencyHz=4.0,
             dampingRatio=0.5,
-            collideConnected=True
+            collideConnected=False
         )
         return self.world.CreateJoint(dfn)
 
@@ -94,3 +95,6 @@ class TensegritySoftBody(SoftBody):
 
     def physics_step(self):
         pass
+
+    def sense(self):
+        return np.array([[min(len(mass.contacts), 1) for mass in module.masses] for module in self.modules.values()]).flatten()

@@ -1,3 +1,4 @@
+import numpy as np
 from Box2D import (b2DistanceJointDef, b2FixtureDef, b2CircleShape)
 
 from soft_body import SoftBody
@@ -99,3 +100,6 @@ class VoxelSoftBody(SoftBody):
 
     def physics_step(self):
         pass
+
+    def sense(self):
+        return np.array([[min(len(mass.contacts), 1) for mass in voxel.masses.values()] for voxel in self.voxels.values()]).flatten()

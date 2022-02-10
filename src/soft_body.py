@@ -17,6 +17,10 @@ class SoftBody(abc.ABC):
     def physics_step(self):
         pass
 
+    @abc.abstractmethod
+    def sense(self):
+        pass
+
     def create_test_obstacles(self):
         box1 = self.world.CreateStaticBody(
             position=(0, -15),
