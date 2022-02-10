@@ -2,10 +2,9 @@ import math
 
 import numpy as np
 from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
-from Box2D.examples.framework import main
 import matplotlib.path as path
 
-from src.soft_body import SoftBody
+from soft_body import SoftBody
 
 
 class PressureSoftBody(SoftBody):
@@ -78,7 +77,3 @@ class PressureSoftBody(SoftBody):
             pressure_force = normal * pressure
             mass_a.ApplyForceToCenter(pressure_force, True)
             mass_b.ApplyForceToCenter(pressure_force, True)
-
-
-if __name__ == "__main__":
-    main(PressureSoftBody)

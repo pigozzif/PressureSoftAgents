@@ -1,7 +1,6 @@
-from Box2D.examples.framework import main
 from Box2D import (b2DistanceJointDef, b2FixtureDef, b2CircleShape)
 
-from src.soft_body import SoftBody
+from soft_body import SoftBody
 
 
 class Voxel(object):
@@ -100,7 +99,3 @@ class VoxelSoftBody(SoftBody):
 
     def physics_step(self):
         pass
-
-
-if __name__ == "__main__":
-    main(VoxelSoftBody)

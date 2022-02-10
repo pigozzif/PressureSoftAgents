@@ -1,9 +1,8 @@
 import math
 
 from Box2D import b2FixtureDef, b2DistanceJointDef, b2CircleShape
-from Box2D.examples.framework import main
 
-from src.soft_body import SoftBody
+from soft_body import SoftBody
 
 
 class TensegrityModule(object):
@@ -95,7 +94,3 @@ class TensegritySoftBody(SoftBody):
 
     def physics_step(self):
         pass
-
-
-if __name__ == "__main__":
-    main(TensegritySoftBody)

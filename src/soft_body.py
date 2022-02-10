@@ -3,10 +3,6 @@ import math
 
 from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape
 
-from src.pressure import PressureSoftBody
-from src.tensegrity import TensegritySoftBody
-from src.voxel import VoxelSoftBody
-
 
 class SoftBody(abc.ABC):
 
@@ -14,14 +10,14 @@ class SoftBody(abc.ABC):
         self.world = world
         # The ground
         self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(min_x, 0), (max_x, 0)])
+            shapes=b2EdgeShape(vertices=[(min_x, -100), (max_x, -100)])
         )
 
     @abc.abstractmethod
     def physics_step(self):
         pass
 
-    def _create_test_obstacles(self):
+    def create_test_obstacles(self):
         box1 = self.world.CreateStaticBody(
             position=(0, -15),
             allowSleep=True,
@@ -50,13 +46,3 @@ class SoftBody(abc.ABC):
                                                                  ]
                                                        )))
         box3.fixedRotation = True
-
-    @classmethod
-    def create_soft_body(cls, name, world, min_x, max_x):
-        if name == "tensegrity":
-            return TensegritySoftBody(world, min_x, max_x)
-        elif name == "pressure":
-            return PressureSoftBody(world, min_x, max_x)
-        elif name == "voxel":
-            return VoxelSoftBody(world, min_x, max_x)
-        raise ValueError("Invalid soft body name: {}".format(name))
