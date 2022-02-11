@@ -104,5 +104,11 @@ class VoxelSoftBody(SoftBody):
     def sense(self):
         return np.array([[min(len(mass.contacts), 1) for mass in voxel.masses.values()] for voxel in self.voxels.values()]).flatten()
 
+    def apply_control(self, control):
+        raise NotImplementedError
+
+    def get_output_dim(self):
+        raise NotImplementedError
+
     def get_center_of_mass(self):
         return np.mean([np.mean([mass.position for mass in voxel.masses.values()], axis=0) for voxel in self.voxels.values()], axis=0)

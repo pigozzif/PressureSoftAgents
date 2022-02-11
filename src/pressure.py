@@ -4,7 +4,7 @@ import numpy as np
 from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
 import matplotlib.path as path
 
-from soft_body import SoftBody
+from soft_body import SoftBody, SpringData
 
 
 class PressureSoftBody(SoftBody):
@@ -24,6 +24,7 @@ class PressureSoftBody(SoftBody):
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
+        self._prev_pos = self.get_center_of_mass()
 
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
@@ -42,13 +43,15 @@ class PressureSoftBody(SoftBody):
         self._add_joint(prev_mass, self.masses[0])
 
     def _add_joint(self, mass, prev_mass):
+        distance = math.sqrt((prev_mass.position[0] - mass.position[0]) ** 2 + (prev_mass.position[1] - mass.position[1]) ** 2)
         dfn = b2DistanceJointDef(
             bodyA=prev_mass,
             bodyB=mass,
             anchorA=prev_mass.position,
             anchorB=mass.position,
             dampingRatio=0.5,
-            collideConnected=False
+            collideConnected=False,
+            userData=SpringData(distance, distance * 1.25, distance * 0.75)
         )
         self.joints.append(self.world.CreateJoint(dfn))
 
@@ -83,7 +86,23 @@ class PressureSoftBody(SoftBody):
             mass_b.ApplyForceToCenter(pressure_force, True)
 
     def sense(self):
-        return np.array([min(len(mass.contacts), 1) for mass in self.masses])
+        curr_pos = self.get_center_of_mass()
+        sens = np.concatenate([np.array([min(len(mass.contacts), 1) for mass in self.masses]),
+                               np.ravel([mass.position for mass in self.masses]),
+                               np.ravel([curr_pos - self._prev_pos])], axis=0)
+        self._prev_pos = curr_pos
+        return sens
+
+    def apply_control(self, control):
+        for force, joint in zip(control, self.joints):
+            data = joint.userData
+            if force >= 0:
+                joint.length = data.rest_length - (data.rest_length - data.min) * force
+            else:
+                joint.length = data.rest_length + (data.max - data.rest_length) * (- force)
+
+    def get_output_dim(self):
+        return len(self.joints)
 
     def get_center_of_mass(self):
         return np.mean([mass.position for mass in self.masses], axis=0)

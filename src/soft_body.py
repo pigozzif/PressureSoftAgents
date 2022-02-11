@@ -1,5 +1,14 @@
 import abc
 
+from dataclasses import dataclass
+
+
+@dataclass
+class SpringData(object):
+    rest_length: float
+    min: float
+    max: float
+
 
 class SoftBody(abc.ABC):
 
@@ -12,6 +21,17 @@ class SoftBody(abc.ABC):
 
     @abc.abstractmethod
     def sense(self):
+        pass
+
+    @abc.abstractmethod
+    def apply_control(self, control):
+        pass
+
+    def get_input_dim(self):
+        return len(self.sense())
+
+    @abc.abstractmethod
+    def get_output_dim(self):
         pass
 
     @abc.abstractmethod

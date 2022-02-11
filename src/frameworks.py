@@ -5,13 +5,14 @@ from Box2D import b2World
 from Box2D.examples.framework import Framework
 from Box2D.examples.settings import fwSettings
 
-from src.utils import create_soft_body, create_task
+from src.agents import Agent
+from src.utils import create_task
 
 
 class AbstractFramework(abc.ABC):
 
-    def __init__(self, soft_body_name, task_name):
-        self.soft_body = create_soft_body(soft_body_name, self.get_world())
+    def __init__(self, soft_body_name, controller_name, task_name):
+        self.agent = Agent.create_agent(soft_body_name, controller_name, self.get_world())
         create_task(self.get_world(), task_name)
 
     @abc.abstractmethod
@@ -31,16 +32,16 @@ class AbstractFramework(abc.ABC):
         pass
 
     def get_reward(self):
-        return self.soft_body.get_center_of_mass()[0]
+        return self.agent.morphology.get_center_of_mass()[0]
 
 
 class RenderFramework(Framework, AbstractFramework):
 
-    def __init__(self, soft_body_name, task_name):
+    def __init__(self, soft_body_name, controller_name, task_name):
         Framework.__init__(self)
-        AbstractFramework.__init__(self, soft_body_name=soft_body_name, task_name=task_name)
-        self.name = self.soft_body.name
-        self.description = self.soft_body.description
+        AbstractFramework.__init__(self, soft_body_name, controller_name, task_name)
+        self.name = self.agent.morphology.name
+        self.description = self.agent.morphology.description
         self.gui_table.updateGUI(self.settings)
         self.clock = pygame.time.Clock()
 
@@ -68,14 +69,14 @@ class RenderFramework(Framework, AbstractFramework):
 
     def Step(self, settings):
         Framework.Step(self, settings)
-        self.soft_body.physics_step()
-        obs = self.soft_body.sense()
+        self.agent.morphology.physics_step()
+        self.agent.act()
 
 
 class NoRenderFramework(AbstractFramework):
 
-    def __init__(self, soft_body_name, task_name):
-        super(NoRenderFramework, self).__init__(soft_body_name, task_name)
+    def __init__(self, soft_body_name, controller_name, task_name):
+        super(NoRenderFramework, self).__init__(soft_body_name, controller_name, task_name)
         self.world = b2World(gravity=(0, -10), doSleep=True)
         self.time_step = 1.0 / 60.0
         self.steps = 0
@@ -89,8 +90,8 @@ class NoRenderFramework(AbstractFramework):
     def step(self):
         self.world.Step(self.time_step, fwSettings.velocityIterations,
                         fwSettings.positionIterations)
-        obs = self.soft_body.sense()
-        self.soft_body.physics_step()
+        self.agent.morphology.physics_step()
+        self.agent.act()
         self.world.ClearForces()
         self.steps += 1
 
