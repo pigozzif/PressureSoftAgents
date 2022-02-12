@@ -49,7 +49,8 @@ class PressureSoftBody(BaseSoftBody):
             bodyB=mass,
             anchorA=prev_mass.position,
             anchorB=mass.position,
-            dampingRatio=0.5,
+            dampingRatio=0.3,
+            frequencyHz=8,
             collideConnected=False,
             userData=SpringData(distance, distance * 1.25, distance * 0.75)
         )
