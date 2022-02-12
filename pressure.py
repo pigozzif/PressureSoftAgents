@@ -31,8 +31,8 @@ class PressureSoftBody(BaseSoftBody):
         theta = 0
         prev_mass = None
         for i in range(self.n_masses):
-            x = self.r * math.cos(theta) + self.r * 1.5
-            y = self.r * math.sin(theta) + self.r * 1.5
+            x = self.r * math.cos(theta) + self.r * 2
+            y = self.r * math.sin(theta) + self.r * 2
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
             mass.angle = theta
             if prev_mass is not None:

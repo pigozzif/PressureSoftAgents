@@ -40,7 +40,7 @@ if __name__ == "__main__":
                         antithetic=False,  # whether to use antithetic sampling
                         weight_decay=0.00,  # weight decay coefficient
                         rank_fitness=False,  # use rank rather than fitness numbers
-                        forget_best=False)
+                        forget_best=True)
         if args.mode.endswith("parallel"):
             best = parallel_solve(solver, args.iterations, args, listener)
         else:

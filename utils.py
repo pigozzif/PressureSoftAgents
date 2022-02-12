@@ -38,9 +38,6 @@ def create_task(world, task_name):
         h, w = int(task_name.split("-")[1]), int(task_name.split("-")[2])
         width = 400
         world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-20, 0), (200, 0)])
-        )
-        world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
         )
         start = -20
