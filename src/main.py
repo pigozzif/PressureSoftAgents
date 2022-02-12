@@ -5,6 +5,7 @@ import numpy as np
 
 from src.agents import BaseController
 from src.es import OpenES
+from src.listener import FileListener
 from src.simulation import simulation, parallel_solve, solve
 from src.utils import set_seed
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     if args.mode == "random":
         simulation(args, np.random.random(n_params), render=True)
     elif args.mode.startswith("opt"):
+        listener = FileListener("metadata.txt")
         solver = OpenES(n_params,  # number of model parameters
                         sigma_init=0.5,  # initial standard deviation
                         sigma_decay=0.999,  # don't anneal standard deviation
@@ -41,9 +43,9 @@ if __name__ == "__main__":
                         rank_fitness=False,  # use rank rather than fitness numbers
                         forget_best=False)
         if args.mode.endswith("parallel"):
-            best = parallel_solve(solver, args.iterations, args)
+            best = parallel_solve(solver, args.iterations, args, listener)
         else:
-            best = solve(solver, args.iterations, args)
+            best = solve(solver, args.iterations, args, listener)
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif args.mode == "best":
         best = np.load("best.npy")

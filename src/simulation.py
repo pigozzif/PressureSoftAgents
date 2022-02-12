@@ -6,7 +6,7 @@ import numpy as np
 from src.simulators import RenderSimulator, NoRenderSimulator
 
 
-def solve(solver, iterations, args):
+def solve(solver, iterations, args, listener):
     history = []
     result = None
     for j in range(iterations):
@@ -20,10 +20,11 @@ def solve(solver, iterations, args):
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
         np.save("best.npy", result[0])
+        listener.listen(**{"iteration": j, "best.fitness": result[1]})
     return result
 
 
-def parallel_solve(solver, iterations, args):
+def parallel_solve(solver, iterations, args, listener):
     num_workers = args.np
     if solver.popsize % num_workers != 0:
         raise RuntimeError("better to have n. workers divisor of pop size")
@@ -40,6 +41,7 @@ def parallel_solve(solver, iterations, args):
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
         np.save("best.npy", result[0])
+        listener.listen(**{"iteration": j, "best.fitness": result[1]})
     return result
 
 
