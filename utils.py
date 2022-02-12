@@ -34,7 +34,35 @@ def create_task(world, task_name):
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
         )
-        return
+    elif task_name.startswith("hilly"):
+        h, w = int(task_name.split("-")[1]), int(task_name.split("-")[2])
+        width = 400
+        world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-20, 0), (200, 0)])
+        )
+        world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
+        )
+        start = -20
+        end = start + max(random.gauss(1, 0.25) * w, 1.0)
+        prev_height = abs(random.gauss(0, h))
+        height = abs(random.gauss(0, h))
+        while end < width:
+            half_x, y = (end - start) / 2, 0
+            world.CreateStaticBody(
+                position=(half_x + start, y),
+                allowSleep=True,
+                fixtures=b2FixtureDef(friction=0.8,
+                                      shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
+                                                                     (- half_x, 0), (half_x, 0)])),
+            )
+            start = end
+            prev_height = height
+            end += max(random.gauss(1, 0.25) * w, 1.0)
+            height = abs(random.gauss(0, h))
+        world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(start, 100), (start, -100)])
+        )
     elif task_name == "obstacles":
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, -100), (100, -100)])
@@ -67,5 +95,5 @@ def create_task(world, task_name):
                                                                  ]
                                                        )))
         box3.fixedRotation = True
-        return
-    raise ValueError("Invalid task name: {}".format(task_name))
+    else:
+        raise ValueError("Invalid task name: {}".format(task_name))

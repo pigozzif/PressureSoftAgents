@@ -14,7 +14,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="arguments")
     parser.add_argument("--body", type=str, default="pressure", help="kind of soft body to simulate")
     parser.add_argument("--brain", type=str, default="phase", help="kind of controller to simulate")
-    parser.add_argument("--task", type=str, default="flat", help="task to simulate")
+    parser.add_argument("--task", type=str, default="hilly-1-10", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
     parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
     parser.add_argument("--iterations", default=750, type=int, help="solver iterations")
@@ -49,4 +49,5 @@ if __name__ == "__main__":
     elif args.mode == "best":
         best = np.load("best.npy")
         simulation(args, best, render=True)
-    raise ValueError("Invalid mode: {}".format(args.mode))
+    else:
+        raise ValueError("Invalid mode: {}".format(args.mode))
