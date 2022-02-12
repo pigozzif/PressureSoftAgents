@@ -2,6 +2,7 @@ import math
 import random
 
 import numpy as np
+import torch
 from Box2D import b2FixtureDef, b2PolygonShape, b2EdgeShape
 
 from src.pressure import PressureSoftBody
@@ -12,6 +13,7 @@ from src.voxel import VoxelSoftBody
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def create_soft_body(name, world):
@@ -27,7 +29,7 @@ def create_soft_body(name, world):
 def create_task(world, task_name):
     if task_name == "flat":
         world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-20, -10), (1000, -10)])
+            shapes=b2EdgeShape(vertices=[(-20, -5), (1000, -5)])
         )
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])

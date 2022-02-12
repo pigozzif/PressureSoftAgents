@@ -3,7 +3,7 @@ import math
 import numpy as np
 from Box2D import b2FixtureDef, b2DistanceJointDef, b2CircleShape
 
-from soft_body import SoftBody
+from soft_body import BaseSoftBody
 
 
 class TensegrityModule(object):
@@ -74,7 +74,7 @@ class TensegrityModule(object):
         return self.world.CreateJoint(dfn)
 
 
-class TensegritySoftBody(SoftBody):
+class TensegritySoftBody(BaseSoftBody):
     name = "Tensegrity-based soft body"
     description = "Demonstration of a tensegrity-based soft body simulation."
     n_modules = 2

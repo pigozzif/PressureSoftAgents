@@ -4,22 +4,22 @@ import numpy as np
 from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
 import matplotlib.path as path
 
-from soft_body import SoftBody, SpringData
+from soft_body import BaseSoftBody, SpringData
 
 
-class PressureSoftBody(SoftBody):
+class PressureSoftBody(BaseSoftBody):
     name = "Pressure-based Soft Body"
     description = "Demonstration of a pressure-based soft body simulation."
-    n_masses = 25
-    r = 10
-    n = 28.0134 * 500
+    n_masses = 15
+    r = 5
+    n = 28.0134 * 100
     R = 8.31446261815324
     T = 298
     nRT = n * R * T
 
     def __init__(self, world):
         super(PressureSoftBody, self).__init__(world)
-        fixture = b2FixtureDef(shape=b2CircleShape(radius=1),
+        fixture = b2FixtureDef(shape=b2CircleShape(radius=0.5),
                                density=5000, friction=0.2)
         self.masses = []
         self.joints = []

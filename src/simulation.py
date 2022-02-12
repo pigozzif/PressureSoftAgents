@@ -1,27 +1,59 @@
-import argparse
+import logging
+from multiprocessing import Pool
 
-from src.frameworks import RenderFramework, NoRenderFramework
-from src.utils import set_seed
+import numpy as np
+
+from src.simulators import RenderSimulator, NoRenderSimulator
 
 
-def simulation(args, render):
+def solve(solver, iterations, args):
+    history = []
+    result = None
+    for j in range(iterations):
+        solutions = solver.ask()
+        fitness_list = np.zeros(solver.popsize)
+        for i in range(solver.popsize):
+            fitness_list[i] = simulation(args, solutions[i], render=False)
+        solver.tell(fitness_list)
+        result = solver.result()  # first element is the best solution, second element is the best fitness
+        history.append(result[1])
+        if (j + 1) % 10 == 0:
+            logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
+        np.save("best.npy", result[0])
+    return result
+
+
+def parallel_solve(solver, iterations, args):
+    num_workers = args.np
+    if solver.popsize % num_workers != 0:
+        raise RuntimeError("better to have n. workers divisor of pop size")
+    history = []
+    result = None
+    for j in range(iterations):
+        solutions = solver.ask()
+        with Pool(num_workers) as pool:
+            results = pool.map(parallel_wrapper, [(args, solutions, i) for i in range(solver.popsize)])
+        fitness_list = [value for _, value in sorted(results, key=lambda x: x[0])]
+        solver.tell(fitness_list)
+        result = solver.result()  # first element is the best solution, second element is the best fitness
+        history.append(result[1])
+        if (j + 1) % 10 == 0:
+            logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
+        np.save("best.npy", result[0])
+    return result
+
+
+def parallel_wrapper(args):
+    arguments, solutions, i = args
+    return i, simulation(arguments, solutions[i], render=False)
+
+
+def simulation(args, solution, render):
     if render:
-        framework = RenderFramework(args.body, None, args.task)
+        framework = RenderSimulator(args.body, args.brain, solution, args.task)
     else:
-        framework = NoRenderFramework(args.body, None, args.task)
+        framework = NoRenderSimulator(args.body, args.brain, solution, args.task)
     while framework.get_step_count() < args.timesteps:
         framework.step()
     framework.reset()
     return framework.get_reward() / (args.timesteps / 60.0)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="arguments")
-    parser.add_argument("--body", type=str, default="pressure", help="kind of soft body to simulate")
-    parser.add_argument("--task", type=str, default="flat", help="task to simulate")
-    parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
-    parser.add_argument("--render", type=bool, default=True, help="render simulation on screen")
-    parser.add_argument("--seed", type=int, default=0, help="random seed")
-    args = parser.parse_args()
-    set_seed(args.seed)
-    simulation(args, args.render)

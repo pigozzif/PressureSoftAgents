@@ -9,10 +9,10 @@ from src.agents import Agent
 from src.utils import create_task
 
 
-class AbstractFramework(abc.ABC):
+class BaseSimulator(abc.ABC):
 
-    def __init__(self, soft_body_name, controller_name, task_name):
-        self.agent = Agent.create_agent(soft_body_name, controller_name, self.get_world())
+    def __init__(self, soft_body_name, controller_name, solution, task_name):
+        self.agent = Agent.create_agent(soft_body_name, controller_name, solution, self.get_world())
         create_task(self.get_world(), task_name)
 
     @abc.abstractmethod
@@ -35,11 +35,11 @@ class AbstractFramework(abc.ABC):
         return self.agent.morphology.get_center_of_mass()[0]
 
 
-class RenderFramework(Framework, AbstractFramework):
+class RenderSimulator(Framework, BaseSimulator):
 
-    def __init__(self, soft_body_name, controller_name, task_name):
+    def __init__(self, soft_body_name, controller_name, solution, task_name):
         Framework.__init__(self)
-        AbstractFramework.__init__(self, soft_body_name, controller_name, task_name)
+        BaseSimulator.__init__(self, soft_body_name, controller_name, solution, task_name)
         self.name = self.agent.morphology.name
         self.description = self.agent.morphology.description
         self.gui_table.updateGUI(self.settings)
@@ -70,14 +70,14 @@ class RenderFramework(Framework, AbstractFramework):
     def Step(self, settings):
         Framework.Step(self, settings)
         self.agent.morphology.physics_step()
-        self.agent.act()
+        self.agent.act(self.stepCount)
 
 
-class NoRenderFramework(AbstractFramework):
+class NoRenderSimulator(BaseSimulator):
 
-    def __init__(self, soft_body_name, controller_name, task_name):
-        super(NoRenderFramework, self).__init__(soft_body_name, controller_name, task_name)
+    def __init__(self, soft_body_name, controller_name, solution, task_name):
         self.world = b2World(gravity=(0, -10), doSleep=True)
+        super(NoRenderSimulator, self).__init__(soft_body_name, controller_name, solution, task_name)
         self.time_step = 1.0 / 60.0
         self.steps = 0
 
@@ -91,7 +91,7 @@ class NoRenderFramework(AbstractFramework):
         self.world.Step(self.time_step, fwSettings.velocityIterations,
                         fwSettings.positionIterations)
         self.agent.morphology.physics_step()
-        self.agent.act()
+        self.agent.act(self.steps)
         self.world.ClearForces()
         self.steps += 1
 

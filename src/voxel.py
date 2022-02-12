@@ -1,7 +1,7 @@
 import numpy as np
 from Box2D import (b2DistanceJointDef, b2FixtureDef, b2CircleShape)
 
-from soft_body import SoftBody
+from soft_body import BaseSoftBody
 
 
 class Voxel(object):
@@ -77,7 +77,7 @@ class Voxel(object):
         return joints
 
 
-class VoxelSoftBody(SoftBody):
+class VoxelSoftBody(BaseSoftBody):
     name = "Voxel-based soft body"
     description = "Demonstration of a voxel-based soft body simulation."
     voxels = []

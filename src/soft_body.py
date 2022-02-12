@@ -10,7 +10,7 @@ class SpringData(object):
     max: float
 
 
-class SoftBody(abc.ABC):
+class BaseSoftBody(abc.ABC):
 
     def __init__(self, world):
         self.world = world
