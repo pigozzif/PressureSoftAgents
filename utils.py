@@ -28,11 +28,14 @@ def create_soft_body(name, world):
 
 def create_task(world, task_name):
     if task_name == "flat":
-        world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-20, 0), (1000, 0)])
+        world.CreateStaticBody(
+            position=(490, -5),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=1.0,
+                                  shape=b2PolygonShape(box=(500, 10))),
         )
         world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
+            shapes=b2EdgeShape(vertices=[(-10, 100), (-10, -100)])
         )
     elif task_name.startswith("hilly"):
         h, w = int(task_name.split("-")[1]), int(task_name.split("-")[2])
