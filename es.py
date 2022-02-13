@@ -89,8 +89,58 @@ class Adam(Optimizer):
         return step
 
 
+class CMAES:
+    """CMA-ES wrapper."""
+
+    def __init__(self, num_params,  # number of model parameters
+                 sigma_init=0.10,  # initial standard deviation
+                 popsize=256,  # population size
+                 weight_decay=0.01):  # weight decay coefficient
+
+        self.num_params = num_params
+        self.sigma_init = sigma_init
+        self.popsize = popsize
+        self.weight_decay = weight_decay
+        self.solutions = None
+
+        import cma
+        self.es = cma.CMAEvolutionStrategy(self.num_params * [0],
+                                           self.sigma_init,
+                                           {'popsize': self.popsize,
+                                            })
+
+    def rms_stdev(self):
+        sigma = self.es.result[6]
+        return np.mean(np.sqrt(sigma * sigma))
+
+    def ask(self):
+        """returns a list of parameters"""
+        self.solutions = np.array(self.es.ask())
+        return self.solutions
+
+    def tell(self, reward_table_result):
+        reward_table = np.array(reward_table_result)
+        if self.weight_decay > 0:
+            l2_decay = compute_weight_decay(self.weight_decay, self.solutions)
+            reward_table += l2_decay
+        self.es.tell(self.solutions, (-reward_table).tolist())  # convert minimizer to maximizer.
+
+    def current_param(self):
+        return self.es.result[5]  # mean solution, presumably better with noise
+
+    def set_mu(self, mu):
+        pass
+
+    def best_param(self):
+        return self.es.result[0]  # best evaluated solution
+
+    def result(self):  # return best params so far, along with historically best reward, curr reward, sigma
+        r = self.es.result
+        return r[0], -r[1], -r[1], r[6]
+
+
 class SimpleGA:
-    '''Simple Genetic Algorithm.'''
+    """Simple Genetic Algorithm."""
 
     def __init__(self, num_params,  # number of model parameters
                  sigma_init=0.1,  # initial standard deviation
@@ -124,13 +174,13 @@ class SimpleGA:
         return self.sigma  # same sigma for all parameters.
 
     def ask(self):
-        '''returns a list of parameters'''
+        """returns a list of parameters"""
         self.epsilon = np.random.randn(self.popsize, self.num_params) * self.sigma
         solutions = []
 
         def mate(a, b):
             c = np.copy(a)
-            idx = np.where(np.random.rand((c.size)) > 0.5)
+            idx = np.where(np.random.rand(c.size) > 0.5)
             c[idx] = b[idx]
             return c
 
@@ -175,7 +225,7 @@ class SimpleGA:
             self.best_reward = self.elite_rewards[0]
             self.best_param = np.copy(self.elite_params[0])
 
-        if (self.sigma > self.sigma_limit):
+        if self.sigma > self.sigma_limit:
             self.sigma *= self.sigma_decay
 
     def current_param(self):
@@ -188,11 +238,11 @@ class SimpleGA:
         return self.best_param
 
     def result(self):  # return best params so far, along with historically best reward, curr reward, sigma
-        return (self.best_param, self.best_reward, self.curr_best_reward, self.sigma)
+        return self.best_param, self.best_reward, self.curr_best_reward, self.sigma
 
 
 class OpenES:
-    ''' Basic Version of OpenAI Evolution Strategies.'''
+    """ Basic Version of OpenAI Evolution Strategies."""
 
     def __init__(self, num_params,  # number of model parameters
                  sigma_init=0.1,  # initial standard deviation
@@ -225,7 +275,7 @@ class OpenES:
         self.mu = np.zeros(self.num_params)
         self.best_mu = np.zeros(self.num_params)
         self.best_reward = 0
-        self.first_interation = True
+        self.first_iteration = True
         self.forget_best = forget_best
         self.weight_decay = weight_decay
         self.rank_fitness = rank_fitness
@@ -239,7 +289,7 @@ class OpenES:
         return np.mean(np.sqrt(sigma * sigma))
 
     def ask(self):
-        '''returns a list of parameters'''
+        """returns a list of parameters"""
         # antithetic sampling
         if self.antithetic:
             self.epsilon_half = np.random.randn(self.half_popsize, self.num_params)
@@ -272,8 +322,8 @@ class OpenES:
         self.curr_best_reward = best_reward
         self.curr_best_mu = best_mu
 
-        if self.first_interation:
-            self.first_interation = False
+        if self.first_iteration:
+            self.first_iteration = False
             self.best_reward = self.curr_best_reward
             self.best_mu = best_mu
         else:
@@ -292,10 +342,10 @@ class OpenES:
         update_ratio = self.optimizer.update(-change_mu)
 
         # adjust sigma according to the adaptive sigma calculation
-        if (self.sigma > self.sigma_limit):
+        if self.sigma > self.sigma_limit:
             self.sigma *= self.sigma_decay
 
-        if (self.learning_rate > self.learning_rate_limit):
+        if self.learning_rate > self.learning_rate_limit:
             self.learning_rate *= self.learning_rate_decay
 
     def current_param(self):
@@ -308,7 +358,7 @@ class OpenES:
         return self.best_mu
 
     def result(self):  # return best params so far, along with historically best reward, curr reward, sigma
-        return (self.best_mu, self.best_reward, self.curr_best_reward, self.sigma)
+        return self.best_mu, self.best_reward, self.curr_best_reward, self.sigma
 
 
 class PEPG:

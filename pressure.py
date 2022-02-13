@@ -12,15 +12,15 @@ class PressureSoftBody(BaseSoftBody):
     description = "Demonstration of a pressure-based soft body simulation."
     n_masses = 15
     r = 5
-    n = 28.0134 * 100
+    n = 28.0134 * 1000
     R = 8.31446261815324
     T = 298
     nRT = n * R * T
 
     def __init__(self, world):
         super(PressureSoftBody, self).__init__(world)
-        fixture = b2FixtureDef(shape=b2CircleShape(radius=0.5),
-                               density=5000, friction=0.2)
+        fixture = b2FixtureDef(shape=b2CircleShape(radius=1.0),
+                               density=5000, friction=10.0)
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
@@ -52,7 +52,7 @@ class PressureSoftBody(BaseSoftBody):
             dampingRatio=0.3,
             frequencyHz=8,
             collideConnected=False,
-            userData=SpringData(distance, distance * 1.75, distance * 0.25)
+            userData=SpringData(distance, distance * 1.25, distance * 0.75)
         )
         self.joints.append(self.world.CreateJoint(dfn))
 
@@ -90,6 +90,7 @@ class PressureSoftBody(BaseSoftBody):
         return self.sensor.sense(self)
 
     def apply_control(self, control):
+        # self.joints = sorted(self.joints, key=lambda x: (x.bodyA.position.x - max(self.joints, key=lambda x: x.bodyA.position.x).bodyA.position.x) ** 2 + (x.bodyA.position.y - self.get_center_of_mass()[1]) ** 2)
         for force, joint in zip(control, self.joints):
             data = joint.userData
             if force >= 0:

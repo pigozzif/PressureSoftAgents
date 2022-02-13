@@ -1,10 +1,12 @@
 import math
 import random
+import os
 
 import numpy as np
 import torch
 from Box2D import b2FixtureDef, b2PolygonShape, b2EdgeShape
 
+from es import OpenES, SimpleGA, CMAES, PEPG
 from pressure import PressureSoftBody
 from tensegrity import TensegritySoftBody
 from voxel import VoxelSoftBody
@@ -14,6 +16,20 @@ def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+
+def create_solver(args, n_params):
+    name = args.solver
+    if name == "es":
+        return OpenES(n_params, forget_best=False)
+    elif name == "ga":
+        return SimpleGA(n_params, popsize=100)
+    elif name == "cmaes":
+        pop_size = 4 + math.floor(3 * math.log(n_params))
+        return CMAES(n_params, sigma_init=0.5, popsize=pop_size + (args.np - pop_size % args.np))
+    elif name == "pepg":
+        return PEPG(n_params, forget_best=False)
+    raise ValueError("Invalid solver name: {}".format(name))
 
 
 def create_soft_body(name, world):
@@ -28,12 +44,13 @@ def create_soft_body(name, world):
 
 def create_task(world, task_name):
     if task_name == "flat":
-        world.CreateStaticBody(
+        ground = world.CreateStaticBody(
             position=(492.5, -6),
             allowSleep=True,
-            fixtures=b2FixtureDef(friction=1.0,
+            fixtures=b2FixtureDef(friction=10.0,
                                   shape=b2PolygonShape(box=(500, 10))),
         )
+        ground.angle = 1 * math.pi / 180
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
         )
@@ -43,23 +60,41 @@ def create_task(world, task_name):
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
         )
-        start = -20
-        end = start + max(random.gauss(1, 0.25) * w, 1.0)
-        prev_height = abs(random.gauss(0, h))
-        height = abs(random.gauss(0, h))
-        while end < width:
-            half_x, y = (end - start) / 2, 0
-            world.CreateStaticBody(
-                position=(half_x + start, y),
-                allowSleep=True,
-                fixtures=b2FixtureDef(friction=0.8,
-                                      shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
-                                                                     (- half_x, 0), (half_x, 0)])),
-            )
-            start = end
-            prev_height = height
-            end += max(random.gauss(1, 0.25) * w, 1.0)
+        if os.path.isfile("./hilly.txt"):
+            with open("./hilly.txt", "r") as file:
+                file.readline()
+                for line in file:
+                    start, end, height, prev_height = tuple(map(lambda x: float(x), line.split(";")))
+                    half_x, y = (end - start) / 2, 0
+                    world.CreateStaticBody(
+                        position=(half_x + start, y),
+                        allowSleep=True,
+                        fixtures=b2FixtureDef(friction=0.8,
+                                              shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
+                                                                             (- half_x, 0), (half_x, 0)])),
+                    )
+        else:
+            with open("./hilly.txt", "w") as file:
+                file.write(";".join(["start", "end", "height", "prev_height"]) + "\n")
+            start = -20
+            end = start + max(random.gauss(1, 0.25) * w, 1.0)
+            prev_height = abs(random.gauss(0, h))
             height = abs(random.gauss(0, h))
+            while end < width:
+                half_x, y = (end - start) / 2, 0
+                world.CreateStaticBody(
+                    position=(half_x + start, y),
+                    allowSleep=True,
+                    fixtures=b2FixtureDef(friction=0.8,
+                                          shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
+                                                                         (- half_x, 0), (half_x, 0)])),
+                )
+                with open("./hilly.txt", "a") as file:
+                    file.write(";".join([str(start), str(end), str(height), str(prev_height)]) + "\n")
+                start = end
+                prev_height = height
+                end += max(random.gauss(1, 0.25) * w, 1.0)
+                height = abs(random.gauss(0, h))
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(start, 100), (start, -100)])
         )
