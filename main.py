@@ -16,7 +16,7 @@ def parse_arguments():
     parser.add_argument("--brain", type=str, default="mlp", help="kind of controller to simulate")
     parser.add_argument("--task", type=str, default="hilly-1-10", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
-    parser.add_argument("--mode", default="best", type=str, help="run mode")
+    parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
     parser.add_argument("--iterations", default=750, type=int, help="solver iterations")
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--np", type=int, default=5, help="number of parallel processes")
