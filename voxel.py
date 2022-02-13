@@ -101,7 +101,7 @@ class VoxelSoftBody(BaseSoftBody):
     def physics_step(self):
         pass
 
-    def sense(self):
+    def get_obs(self):
         return np.array([[min(len(mass.contacts), 1) for mass in voxel.masses.values()] for voxel in self.voxels.values()]).flatten()
 
     def apply_control(self, control):

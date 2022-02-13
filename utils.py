@@ -29,7 +29,7 @@ def create_soft_body(name, world):
 def create_task(world, task_name):
     if task_name == "flat":
         world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-20, -5), (1000, -5)])
+            shapes=b2EdgeShape(vertices=[(-20, 0), (1000, 0)])
         )
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])

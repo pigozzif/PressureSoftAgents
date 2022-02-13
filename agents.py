@@ -127,7 +127,7 @@ class Agent(object):
         self.world = world
 
     def act(self, t):
-        obs = self.morphology.sense()
+        obs = self.morphology.get_obs()
         control = self.controller.control(t, obs)
         self.morphology.apply_control(control)
 

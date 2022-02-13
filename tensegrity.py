@@ -96,7 +96,7 @@ class TensegritySoftBody(BaseSoftBody):
     def physics_step(self):
         pass
 
-    def sense(self):
+    def get_obs(self):
         return np.array(
             [[min(len(mass.contacts), 1) for mass in module.masses] for module in self.modules.values()]).flatten()
 

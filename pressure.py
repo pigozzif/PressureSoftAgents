@@ -4,7 +4,7 @@ import numpy as np
 from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
 import matplotlib.path as path
 
-from soft_body import BaseSoftBody, SpringData
+from soft_body import BaseSoftBody, SpringData, Sensor
 
 
 class PressureSoftBody(BaseSoftBody):
@@ -24,7 +24,7 @@ class PressureSoftBody(BaseSoftBody):
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
-        self._prev_pos = self.get_center_of_mass()
+        self.sensor = Sensor(self.n_masses * 3 + 2, 0.25 * 60, self)
 
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
@@ -86,13 +86,8 @@ class PressureSoftBody(BaseSoftBody):
             mass_a.ApplyForceToCenter(pressure_force, True)
             mass_b.ApplyForceToCenter(pressure_force, True)
 
-    def sense(self):
-        curr_pos = self.get_center_of_mass()
-        sens = np.concatenate([np.array([min(len(mass.contacts), 1) for mass in self.masses]),
-                               np.ravel([mass.position - curr_pos for mass in self.masses]),
-                               np.ravel([curr_pos - self._prev_pos])], axis=0)
-        self._prev_pos = curr_pos
-        return sens
+    def get_obs(self):
+        return self.sensor.sense(self)
 
     def apply_control(self, control):
         for force, joint in zip(control, self.joints):
