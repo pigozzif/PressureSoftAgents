@@ -31,7 +31,7 @@ class PressureSoftBody(BaseSoftBody):
         theta = 0
         prev_mass = None
         for i in range(self.n_masses):
-            x = self.r * math.cos(theta) + self.r * 2
+            x = self.r * math.cos(theta)
             y = self.r * math.sin(theta) + self.r * 2
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
             mass.angle = theta
@@ -89,7 +89,7 @@ class PressureSoftBody(BaseSoftBody):
     def sense(self):
         curr_pos = self.get_center_of_mass()
         sens = np.concatenate([np.array([min(len(mass.contacts), 1) for mass in self.masses]),
-                               np.ravel([mass.position for mass in self.masses]),
+                               np.ravel([mass.position - curr_pos for mass in self.masses]),
                                np.ravel([curr_pos - self._prev_pos])], axis=0)
         self._prev_pos = curr_pos
         return sens

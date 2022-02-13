@@ -36,7 +36,7 @@ class BaseController(abc.ABC):
         elif brain == "phase":
             return 15 + 2
         elif brain == "mlp":
-            return (15 + 15 + 15 + 2) * 15 + 15
+            return (15 + 30 + 2) * 15 + 15
         raise ValueError("Invalid controller name: {}".format(brain))
 
     @classmethod
