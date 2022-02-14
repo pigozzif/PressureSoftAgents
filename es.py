@@ -176,6 +176,9 @@ class SimpleGA:
     def ask(self):
         """returns a list of parameters"""
         self.epsilon = np.random.randn(self.popsize, self.num_params) * self.sigma
+        if self.first_iteration:
+            self.solutions = np.random.random((self.popsize, self.num_params)) * 2.0 - 1.0
+            return self.solutions
         solutions = []
 
         def mate(a, b):
@@ -297,8 +300,10 @@ class OpenES:
         else:
             self.epsilon = np.random.randn(self.popsize, self.num_params)
 
-        self.solutions = self.mu.reshape(1, self.num_params) + self.epsilon * self.sigma
-
+        if self.first_iteration:
+            self.solutions = np.random.random((self.popsize, self.num_params)) * 2 - 1.0
+        else:
+            self.solutions = self.mu.reshape(1, self.num_params) + self.epsilon * self.sigma
         return self.solutions
 
     def tell(self, reward_table_result):
@@ -362,7 +367,7 @@ class OpenES:
 
 
 class PEPG:
-    '''Extension of PEPG with bells and whistles.'''
+    """Extension of PEPG with bells and whistles."""
 
     def __init__(self, num_params,  # number of model parameters
                  sigma_init=0.10,  # initial standard deviation
@@ -412,7 +417,7 @@ class PEPG:
         self.curr_best_mu = np.zeros(self.num_params)
         self.best_mu = np.zeros(self.num_params)
         self.best_reward = 0
-        self.first_interation = True
+        self.first_iteration = True
         self.weight_decay = weight_decay
         self.rank_fitness = rank_fitness
         if self.rank_fitness:
@@ -425,7 +430,7 @@ class PEPG:
         return np.mean(np.sqrt(sigma * sigma))
 
     def ask(self):
-        '''returns a list of parameters'''
+        """returns a list of parameters"""
         # antithetic sampling
         self.epsilon = np.random.randn(self.batch_size, self.num_params) * self.sigma.reshape(1, self.num_params)
         self.epsilon_full = np.concatenate([self.epsilon, - self.epsilon])
@@ -465,7 +470,7 @@ class PEPG:
             idx = np.argsort(reward)[::-1]
 
         best_reward = reward[idx[0]]
-        if (best_reward > b or self.average_baseline):
+        if best_reward > b or self.average_baseline:
             best_mu = self.mu + self.epsilon_full[idx[0]]
             best_reward = reward[idx[0]]
         else:
@@ -475,9 +480,9 @@ class PEPG:
         self.curr_best_reward = best_reward
         self.curr_best_mu = best_mu
 
-        if self.first_interation:
+        if self.first_iteration:
             self.sigma = np.ones(self.num_params) * self.sigma_init
-            self.first_interation = False
+            self.first_iteration = False
             self.best_reward = self.curr_best_reward
             self.best_mu = best_mu
         else:
@@ -503,7 +508,7 @@ class PEPG:
 
         # adaptive sigma
         # normalization
-        if (self.sigma_alpha > 0):
+        if self.sigma_alpha > 0:
             stdev_reward = 1.0
             if not self.rank_fitness:
                 stdev_reward = reward.std()
@@ -519,10 +524,10 @@ class PEPG:
             change_sigma = np.maximum(change_sigma, - self.sigma_max_change * self.sigma)
             self.sigma += change_sigma
 
-        if (self.sigma_decay < 1):
+        if self.sigma_decay < 1:
             self.sigma[self.sigma > self.sigma_limit] *= self.sigma_decay
 
-        if (self.learning_rate_decay < 1 and self.learning_rate > self.learning_rate_limit):
+        if self.learning_rate_decay < 1 and self.learning_rate > self.learning_rate_limit:
             self.learning_rate *= self.learning_rate_decay
 
     def current_param(self):
@@ -535,4 +540,4 @@ class PEPG:
         return self.best_mu
 
     def result(self):  # return best params so far, along with historically best reward, curr reward, sigma
-        return (self.best_mu, self.best_reward, self.curr_best_reward, self.sigma)
+        return self.best_mu, self.best_reward, self.curr_best_reward, self.sigma

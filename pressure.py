@@ -52,7 +52,7 @@ class PressureSoftBody(BaseSoftBody):
             dampingRatio=0.3,
             frequencyHz=8,
             collideConnected=False,
-            userData=SpringData(distance, distance * 1.25, distance * 0.75)
+            userData=SpringData(distance, distance * 1.5, distance * 0.5)
         )
         self.joints.append(self.world.CreateJoint(dfn))
 

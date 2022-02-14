@@ -21,7 +21,7 @@ def set_seed(seed):
 def create_solver(args, n_params):
     name = args.solver
     if name == "es":
-        return OpenES(n_params, forget_best=False)
+        return OpenES(n_params, popsize=40, forget_best=False)
     elif name == "ga":
         return SimpleGA(n_params, popsize=100)
     elif name == "cmaes":

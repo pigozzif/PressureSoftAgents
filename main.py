@@ -13,10 +13,10 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="arguments")
     parser.add_argument("--body", type=str, default="pressure", help="kind of soft body to simulate")
     parser.add_argument("--brain", type=str, default="mlp", help="kind of controller to simulate")
-    parser.add_argument("--solver", type=str, default="cmaes", help="solver for optimization")
-    parser.add_argument("--task", type=str, default="hilly-1-10", help="task to simulate")
+    parser.add_argument("--solver", type=str, default="es", help="solver for optimization")
+    parser.add_argument("--task", type=str, default="flat", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
-    parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
+    parser.add_argument("--mode", default="opt", type=str, help="run mode")
     parser.add_argument("--evaluations", default=30000, type=int, help="number of solver evaluations")
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--np", type=int, default=5, help="number of parallel processes")
@@ -39,6 +39,6 @@ if __name__ == "__main__":
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif args.mode == "best":
         best = np.load("best.npy")
-        simulation(args, best, render=True)
+        print("fitness: {}".format(simulation(args, best, render=True)))
     else:
         raise ValueError("Invalid mode: {}".format(args.mode))
