@@ -1,9 +1,8 @@
 import abc
 
 import pygame
-from Box2D import b2World
 from Box2D.examples.framework import Framework
-from Box2D.examples.settings import fwSettings
+from Box2D.examples.framework import FrameworkBase
 
 from agents import Agent
 from utils import create_task
@@ -68,32 +67,40 @@ class RenderSimulator(Framework, BaseSimulator):
         self.world.renderer = None
 
     def Step(self, settings):
-        Framework.Step(self, settings)
+        FrameworkBase.Step(self, settings)
         self.agent.morphology.physics_step()
         self.agent.act(self.stepCount)
 
 
-class NoRenderSimulator(BaseSimulator):
+class NoRenderSimulator(BaseSimulator, FrameworkBase):
 
     def __init__(self, soft_body_name, controller_name, solution, task_name):
-        self.world = b2World(gravity=(0, -10), doSleep=True)
-        super(NoRenderSimulator, self).__init__(soft_body_name, controller_name, solution, task_name)
-        self.time_step = 1.0 / 60.0
-        self.steps = 0
+        FrameworkBase.__init__(self)
+        BaseSimulator.__init__(self, soft_body_name, controller_name, solution, task_name)
+        self.name = self.agent.morphology.name
+        self.description = self.agent.morphology.description
+        self.renderer = None
+        self.world.renderer = self.renderer
+        self.groundbody = self.world.CreateBody()
 
     def get_world(self):
         return self.world
 
     def get_step_count(self):
-        return self.steps
+        return self.stepCount
 
     def step(self):
-        self.world.Step(self.time_step, fwSettings.velocityIterations,
-                        fwSettings.positionIterations)
-        self.agent.morphology.physics_step()
-        self.agent.act(self.steps)
-        self.world.ClearForces()
-        self.steps += 1
+        self.SimulationLoop()
 
     def reset(self):
-        pass
+        self.world.contactListener = None
+        self.world.destructionListener = None
+        self.world.renderer = None
+
+    def SimulationLoop(self):
+        self.Step(self.settings)
+
+    def Step(self, settings):
+        FrameworkBase.Step(self, settings)
+        self.agent.morphology.physics_step()
+        self.agent.act(self.stepCount)

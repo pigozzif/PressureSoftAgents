@@ -7,7 +7,6 @@ from simulators import RenderSimulator, NoRenderSimulator
 
 
 def solve(solver, iterations, args, listener):
-    history = []
     result = None
     for j in range(iterations):
         solutions = solver.ask()
@@ -16,11 +15,10 @@ def solve(solver, iterations, args, listener):
             fitness_list[i] = simulation(args, solutions[i], render=False)
         solver.tell(fitness_list)
         result = solver.result()  # first element is the best solution, second element is the best fitness
-        history.append(result[1])
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
-        np.save("best.npy", result[0])
-        listener.listen(**{"iteration": j, "best.fitness": result[1]})
+        listener.listen(**{"iteration": j, "best.fitness": result[1], "best.genotype":
+                        ",".join(list(map(lambda x: str(x), result[0])))})
     return result
 
 
@@ -28,7 +26,6 @@ def parallel_solve(solver, iterations, args, listener):
     num_workers = args.np
     if solver.popsize % num_workers != 0:
         raise RuntimeError("better to have n. workers divisor of pop size")
-    history = []
     result = None
     for j in range(iterations):
         solutions = solver.ask()
@@ -37,18 +34,16 @@ def parallel_solve(solver, iterations, args, listener):
         fitness_list = [value for _, value in sorted(results, key=lambda x: x[0])]
         solver.tell(fitness_list)
         result = solver.result()  # first element is the best solution, second element is the best fitness
-        history.append(result[1])
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
-        np.save("best.npy", result[0])
-        listener.listen(**{"iteration": j, "best.fitness": result[1]})
+        listener.listen(**{"iteration": j, "best.fitness": result[1], "best.genotype":
+                        ",".join(list(map(lambda x: str(x), result[0])))})
     return result
 
 
 def parallel_wrapper(args):
     arguments, solution, i = args
     fitness = simulation(arguments, solution, render=False)
-    print(i, fitness)
     return i, fitness
 
 

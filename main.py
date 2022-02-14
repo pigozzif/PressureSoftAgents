@@ -16,7 +16,7 @@ def parse_arguments():
     parser.add_argument("--solver", type=str, default="cmaes", help="solver for optimization")
     parser.add_argument("--task", type=str, default="flat", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
-    parser.add_argument("--mode", default="opt", type=str, help="run mode")
+    parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
     parser.add_argument("--evaluations", default=30000, type=int, help="number of solver evaluations")
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--np", type=int, default=8, help="number of parallel processes")
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     if args.mode == "random":
         simulation(args, np.random.random(n_params), render=True)
     elif args.mode.startswith("opt"):
-        listener = FileListener("metadata.txt", ["iteration", "best.fitness"])
+        listener = FileListener("metadata.txt", ["iteration", "best.fitness", "best.genotype"])
         solver = create_solver(args, n_params)
         if args.mode.endswith("parallel"):
             best = parallel_solve(solver, args.evaluations // solver.popsize, args, listener)
@@ -38,7 +38,7 @@ if __name__ == "__main__":
             best = solve(solver, args.evaluations // solver.popsize, args, listener)
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif args.mode == "best":
-        best = np.load("best.npy")
+        best = list(map(lambda x: float(x), open("metadata.txt", "r").readlines()[-1].strip().split(";")[-1].split(",")))
         print("fitness: {}".format(simulation(args, best, render=True)))
     else:
         raise ValueError("Invalid mode: {}".format(args.mode))

@@ -108,10 +108,9 @@ class MLPController(BaseController):
         start = 0
         for key, coeffs in state_dict.items():
             num = coeffs.numel()
-            state_dict[key] = torch.tensor(params[start:start + num])
+            state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
             start += num
-        for param in self.nn.parameters():
-            param.requires_grad = False
+        self.nn.load_state_dict(state_dict)
 
     def control(self, t, obs):
         return self.nn(torch.from_numpy(obs).float()).detach().numpy()
