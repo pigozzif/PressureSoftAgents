@@ -10,7 +10,7 @@ from soft_body import BaseSoftBody, SpringData, Sensor
 class PressureSoftBody(BaseSoftBody):
     name = "Pressure-based Soft Body"
     description = "Demonstration of a pressure-based soft body simulation."
-    n_masses = 15
+    n_masses = 10
     r = 5
     n = 28.0134 * 1000
     R = 8.31446261815324
@@ -52,7 +52,7 @@ class PressureSoftBody(BaseSoftBody):
             dampingRatio=0.3,
             frequencyHz=8,
             collideConnected=False,
-            userData=SpringData(distance, distance * 1.5, distance * 0.5)
+            userData=SpringData(distance, distance * 1.25, distance * 0.75)
         )
         self.joints.append(self.world.CreateJoint(dfn))
 

@@ -33,7 +33,7 @@ def parallel_solve(solver, iterations, args, listener):
     for j in range(iterations):
         solutions = solver.ask()
         with Pool(num_workers) as pool:
-            results = pool.map(parallel_wrapper, [(args, solutions, i) for i in range(solver.popsize)])
+            results = pool.map(parallel_wrapper, [(args, solutions[i], i) for i in range(solver.popsize)])
         fitness_list = [value for _, value in sorted(results, key=lambda x: x[0])]
         solver.tell(fitness_list)
         result = solver.result()  # first element is the best solution, second element is the best fitness
@@ -46,8 +46,10 @@ def parallel_solve(solver, iterations, args, listener):
 
 
 def parallel_wrapper(args):
-    arguments, solutions, i = args
-    return i, simulation(arguments, solutions[i], render=False)
+    arguments, solution, i = args
+    fitness = simulation(arguments, solution, render=False)
+    print(i, fitness)
+    return i, fitness
 
 
 def simulation(args, solution, render):

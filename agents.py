@@ -5,6 +5,7 @@ import random
 import numpy as np
 import torch
 
+from pressure import PressureSoftBody
 from utils import create_soft_body
 
 
@@ -34,9 +35,9 @@ class BaseController(abc.ABC):
         if brain == "random":
             return 0
         elif brain == "phase":
-            return 15 + 2
+            return PressureSoftBody.n_masses + 2
         elif brain == "mlp":
-            return (15 + 30 + 2) * 15 + 15
+            return (PressureSoftBody.n_masses * 3 + 2) * PressureSoftBody.n_masses + PressureSoftBody.n_masses
         raise ValueError("Invalid controller name: {}".format(brain))
 
     @classmethod
