@@ -8,8 +8,6 @@ from soft_body import BaseSoftBody, SpringData, Sensor
 
 
 class PressureSoftBody(BaseSoftBody):
-    name = "Pressure-based Soft Body"
-    description = "Demonstration of a pressure-based soft body simulation."
     n_masses = 10
     r = 5
     n = 28.0134 * 50

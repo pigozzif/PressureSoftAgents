@@ -78,8 +78,6 @@ class Voxel(object):
 
 
 class VoxelSoftBody(BaseSoftBody):
-    name = "Voxel-based soft body"
-    description = "Demonstration of a voxel-based soft body simulation."
     voxels = []
     joints = []
     n_bodies_x = 2

@@ -75,8 +75,6 @@ class TensegrityModule(object):
 
 
 class TensegritySoftBody(BaseSoftBody):
-    name = "Tensegrity-based soft body"
-    description = "Demonstration of a tensegrity-based soft body simulation."
     n_modules = 2
     n_bodies_x = 4
     n_bodies_y = 2

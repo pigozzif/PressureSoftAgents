@@ -49,10 +49,10 @@ def parallel_wrapper(args):
 
 def simulation(args, solution, render):
     if render:
-        framework = RenderSimulator(args.body, args.brain, solution, args.task)
+        framework = RenderSimulator(args, solution)
     else:
-        framework = NoRenderSimulator(args.body, args.brain, solution, args.task)
+        framework = NoRenderSimulator(args, solution)
     while framework.get_step_count() < args.timesteps:
         framework.step()
     framework.reset()
-    return framework.get_reward() / (args.timesteps / 60.0)
+    return framework.env.get_reward()
