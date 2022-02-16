@@ -55,4 +55,4 @@ def simulation(args, solution, render):
     while framework.get_step_count() < args.timesteps:
         framework.step()
     framework.reset()
-    return framework.env.get_reward()
+    return framework.env.get_reward(framework.morphology, framework.get_step_count())

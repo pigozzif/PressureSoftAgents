@@ -173,33 +173,32 @@ class Escape(BaseEnv):
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(roof * 0.75, 1)))
         )
+        #self.world.CreateStaticBody(
+        #    position=(roof / 1.5, roof / 8),
+        #    allowSleep=True,
+        #    fixtures=b2FixtureDef(friction=0.8,
+        #                          shape=b2PolygonShape(box=(1, roof / 8)))
+        #)
+        #self.world.CreateStaticBody(
+        #    position=(- roof / 1.5, roof / 8),
+        #    fixtures=b2FixtureDef(friction=0.8,
+        #                          shape=b2PolygonShape(box=(1, roof / 8)))
+        #)
         self.world.CreateStaticBody(
-            position=(roof / 1.5, roof / 6),
+            position=(roof / 1.5, roof / 1.65),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 6)))
+                                  shape=b2PolygonShape(box=(1, roof / 3)))
         )
         self.world.CreateStaticBody(
-            position=(- roof / 1.5, roof / 6),
+            position=(- roof / 1.5, roof / 1.65),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 6)))
-        )
-        self.world.CreateStaticBody(
-            position=(roof / 1.5, roof / 1.25),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 6)))
-        )
-        self.world.CreateStaticBody(
-            position=(- roof / 1.5, roof / 1.25),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 6)))
+                                  shape=b2PolygonShape(box=(1, roof / 3)))
         )
 
     def get_initial_pos(self):
         return 0, 5
 
     def get_reward(self, morphology, t):
-        return abs(morphology.get_center_of_mass()[0]) / (t / 60.0)
+        return abs(morphology.get_center_of_mass()[0])
