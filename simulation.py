@@ -17,7 +17,7 @@ def solve(solver, iterations, args, listener):
         result = solver.result()  # first element is the best solution, second element is the best fitness
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
-        listener.listen(**{"iteration": j, "best.fitness": result[1], "best.genotype":
+        listener.listen(**{"iteration": j, "evaluations": j * solver.popsize, "best.fitness": result[1], "best.genotype":
                         ",".join(list(map(lambda x: str(x), result[0])))})
     return result
 
@@ -36,7 +36,7 @@ def parallel_solve(solver, iterations, args, listener):
         result = solver.result()  # first element is the best solution, second element is the best fitness
         if (j + 1) % 10 == 0:
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
-        listener.listen(**{"iteration": j, "best.fitness": result[1], "best.genotype":
+        listener.listen(**{"iteration": j, "evaluations": j * solver.popsize, "best.fitness": result[1], "best.genotype":
                         ",".join(list(map(lambda x: str(x), result[0])))})
     return result
 

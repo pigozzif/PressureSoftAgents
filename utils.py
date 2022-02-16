@@ -23,7 +23,7 @@ def create_solver(args, n_params):
     if name == "es":
         return OpenES(n_params, popsize=40, rank_fitness=False, forget_best=False)
     elif name == "ga":
-        return SimpleGA(n_params, popsize=100)
+        return SimpleGA(n_params, popsize=96)
     elif name == "cmaes":
         pop_size = 4 + math.floor(3 * math.log(n_params))
         return CMAES(n_params, sigma_init=0.5, popsize=pop_size + (args.np - pop_size % args.np))
@@ -60,8 +60,8 @@ def create_task(world, task_name):
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
         )
-        if os.path.isfile("./hilly.txt"):
-            with open("./hilly.txt", "r") as file:
+        if os.path.isfile("./terrains/hilly.txt"):
+            with open("./terrains/hilly.txt", "r") as file:
                 file.readline()
                 for line in file:
                     start, end, height, prev_height = tuple(map(lambda x: float(x), line.split(";")))
@@ -71,10 +71,10 @@ def create_task(world, task_name):
                         allowSleep=True,
                         fixtures=b2FixtureDef(friction=0.8,
                                               shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
-                                                                             (- half_x, 0), (half_x, 0)])),
+                                                                             (- half_x, -100), (half_x, -100)])),
                     )
         else:
-            with open("./hilly.txt", "w") as file:
+            with open("./terrains/hilly.txt", "w") as file:
                 file.write(";".join(["start", "end", "height", "prev_height"]) + "\n")
             start = -20
             end = start + max(random.gauss(1, 0.25) * w, 1.0)
@@ -87,9 +87,9 @@ def create_task(world, task_name):
                     allowSleep=True,
                     fixtures=b2FixtureDef(friction=0.8,
                                           shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
-                                                                         (- half_x, 0), (half_x, 0)])),
+                                                                         (- half_x, -100), (half_x, -100)])),
                 )
-                with open("./hilly.txt", "a") as file:
+                with open("./terrains/hilly.txt", "a") as file:
                     file.write(";".join([str(start), str(end), str(height), str(prev_height)]) + "\n")
                 start = end
                 prev_height = height
@@ -97,6 +97,41 @@ def create_task(world, task_name):
                 height = abs(random.gauss(0, h))
         world.CreateBody(
             shapes=b2EdgeShape(vertices=[(start, 100), (start, -100)])
+        )
+    elif task_name == "escape":
+        ground = PressureSoftBody.r * 2
+        world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-100, ground / 2), (100, ground / 2)])
+        )
+        world.CreateStaticBody(
+            position=(0, ground * 1.5),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(ground - 1, 1)))
+        )
+        world.CreateStaticBody(
+            position=(ground - 2, ground / 1.5),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, ground / 6)))
+        )
+        world.CreateStaticBody(
+            position=(- ground + 2, ground / 1.5),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, ground / 6)))
+        )
+        world.CreateStaticBody(
+            position=(ground - 2, ground / 0.75),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, ground / 6)))
+        )
+        world.CreateStaticBody(
+            position=(- ground + 2, ground / 0.75),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, ground / 6)))
         )
     elif task_name == "obstacles":
         world.CreateBody(

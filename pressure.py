@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2
+from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2, b2PolygonShape
 import matplotlib.path as path
 
 from soft_body import BaseSoftBody, SpringData, Sensor
@@ -12,15 +12,16 @@ class PressureSoftBody(BaseSoftBody):
     description = "Demonstration of a pressure-based soft body simulation."
     n_masses = 10
     r = 5
-    n = 28.0134 * 1000
+    n = 28.0134 * 50
     R = 8.31446261815324
-    T = 298
+    T = 288.15
     nRT = n * R * T
 
     def __init__(self, world):
         super(PressureSoftBody, self).__init__(world)
-        fixture = b2FixtureDef(shape=b2CircleShape(radius=1.0),
-                               density=5000, friction=10.0)
+        fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
+                               # shape=b2CircleShape(radius=0.5),
+                               density=2500, friction=10.0)
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
@@ -90,7 +91,6 @@ class PressureSoftBody(BaseSoftBody):
         return self.sensor.sense(self)
 
     def apply_control(self, control):
-        # self.joints = sorted(self.joints, key=lambda x: (x.bodyA.position.x - max(self.joints, key=lambda x: x.bodyA.position.x).bodyA.position.x) ** 2 + (x.bodyA.position.y - self.get_center_of_mass()[1]) ** 2)
         for force, joint in zip(control, self.joints):
             data = joint.userData
             if force >= 0:
