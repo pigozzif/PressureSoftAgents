@@ -4,16 +4,18 @@ import pygame
 from Box2D.examples.framework import Framework
 from Box2D.examples.framework import FrameworkBase
 
-from agents import Agent
+from controllers import BaseController
 from tasks import BaseEnv
-from utils import create_task
+from utils import create_soft_body
 
 
 class BaseSimulator(abc.ABC):
 
     def __init__(self, args, solution):
-        self.agent = Agent.create_agent(args.body, args.brain, solution, self.get_world())
         self.env = BaseEnv.create_env(args, self.get_world())
+        self.morphology = create_soft_body(args.body, self.env.get_initial_pos(), self.get_world())
+        self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
+                                                           self.morphology.get_output_dim(), args.brain, solution)
         self.name = "{}-based Soft Body".format(args.body.capitalize())
         self.description = "Demonstration of a {}-based soft body simulation.".format(args.body)
 
@@ -32,6 +34,11 @@ class BaseSimulator(abc.ABC):
     @abc.abstractmethod
     def reset(self):
         pass
+
+    def act(self, t):
+        obs = self.morphology.get_obs()
+        control = self.controller.control(t, obs)
+        self.morphology.apply_control(control)
 
 
 class RenderSimulator(Framework, BaseSimulator):
@@ -66,8 +73,8 @@ class RenderSimulator(Framework, BaseSimulator):
 
     def Step(self, settings):
         FrameworkBase.Step(self, settings)
-        self.agent.morphology.physics_step()
-        self.agent.act(self.stepCount)
+        self.morphology.physics_step()
+        self.act(self.stepCount)
 
 
 class NoRenderSimulator(BaseSimulator, FrameworkBase):
@@ -98,5 +105,5 @@ class NoRenderSimulator(BaseSimulator, FrameworkBase):
 
     def Step(self, settings):
         FrameworkBase.Step(self, settings)
-        self.agent.morphology.physics_step()
-        self.agent.act(self.stepCount)
+        self.morphology.physics_step()
+        self.act(self.stepCount)

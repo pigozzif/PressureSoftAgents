@@ -84,17 +84,20 @@ class VoxelSoftBody(BaseSoftBody):
     n_bodies_y = 5
     voxel_size = 5
 
-    def __init__(self, world):
-        super(VoxelSoftBody, self).__init__(world)
+    def __init__(self, world, start_x, start_y):
+        super(VoxelSoftBody, self).__init__(world, start_x, start_y)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
         # initialize voxels
         self.voxels = {}
         for x in range(self.n_bodies_x + 1):
             for y in range(self.n_bodies_y + 1):
-                pos_x, pos_y = x * self.voxel_size, y * self.voxel_size
+                pos_x, pos_y = x * self.voxel_size + self.start_x, y * self.voxel_size + self.start_y
                 self.voxels[(x, y)] = Voxel(pos_x, pos_y + 1, self.voxel_size, self.world, fixture, self.voxels,
                                             self.n_bodies_x, self.n_bodies_y)
+
+    def size(self):
+        return self.n_bodies_x * self.voxel_size, self.n_bodies_y * self.voxel_size
 
     def physics_step(self):
         pass

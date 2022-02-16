@@ -6,7 +6,6 @@ import numpy as np
 import torch
 
 from pressure import PressureSoftBody
-from utils import create_soft_body
 
 
 class BaseController(abc.ABC):
@@ -117,22 +116,3 @@ class MLPController(BaseController):
 
     def get_number_of_params(self):
         raise self.input_dim * self.output_dim + self.output_dim
-
-
-class Agent(object):
-
-    def __init__(self, morphology, controller, world):
-        self.morphology = morphology
-        self.controller = controller
-        self.world = world
-
-    def act(self, t):
-        obs = self.morphology.get_obs()
-        control = self.controller.control(t, obs)
-        self.morphology.apply_control(control)
-
-    @classmethod
-    def create_agent(cls, body, brain, solution, world):
-        morphology = create_soft_body(body, world)
-        return Agent(morphology, BaseController.create_controller(morphology.get_input_dim(),
-                                                                  morphology.get_output_dim(), brain, solution), world)

@@ -45,8 +45,14 @@ class Sensor(object):
 
 class BaseSoftBody(abc.ABC):
 
-    def __init__(self, world):
+    def __init__(self, world, start_x, start_y):
         self.world = world
+        self.start_x = start_x
+        self.start_y = start_y
+
+    @abc.abstractmethod
+    def size(self):
+        pass
 
     @abc.abstractmethod
     def physics_step(self):

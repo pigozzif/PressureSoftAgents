@@ -15,8 +15,8 @@ class PressureSoftBody(BaseSoftBody):
     T = 288.15
     nRT = n * R * T
 
-    def __init__(self, world):
-        super(PressureSoftBody, self).__init__(world)
+    def __init__(self, world, start_x, start_y):
+        super(PressureSoftBody, self).__init__(world, start_x, start_y)
         fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
                                # shape=b2CircleShape(radius=0.5),
                                density=2500, friction=10.0)
@@ -30,8 +30,8 @@ class PressureSoftBody(BaseSoftBody):
         theta = 0
         prev_mass = None
         for i in range(self.n_masses):
-            x = self.r * math.cos(theta)
-            y = self.r * math.sin(theta) + self.r * 2
+            x = self.r * math.cos(theta) + self.start_x
+            y = self.r * math.sin(theta) + self.start_y
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
             mass.angle = theta
             if prev_mass is not None:
@@ -54,6 +54,9 @@ class PressureSoftBody(BaseSoftBody):
             userData=SpringData(distance, distance * 1.25, distance * 0.75)
         )
         self.joints.append(self.world.CreateJoint(dfn))
+
+    def size(self):
+        return self.r * 2, self.r * 2
 
     @staticmethod
     def _get_normalized_normal(mass_a, mass_b, polygon):

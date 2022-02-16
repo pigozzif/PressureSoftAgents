@@ -80,16 +80,19 @@ class TensegritySoftBody(BaseSoftBody):
     n_bodies_y = 2
     module_size = 2.5
 
-    def __init__(self, world):
-        super(TensegritySoftBody, self).__init__(world)
+    def __init__(self, world, start_x, start_y):
+        super(TensegritySoftBody, self).__init__(world, start_x, start_y)
         fixture = b2FixtureDef(shape=b2CircleShape(),
                                density=5, friction=0.2)
         self.modules = {}
         for x in range(self.n_bodies_x + 1):
             for y in range(self.n_bodies_y + 1):
-                pos_x, pos_y = x * self.module_size * 2, y * math.sqrt(3) * self.module_size
+                pos_x, pos_y = x * self.module_size * 2 + self.start_x, y * math.sqrt(3) * self.module_size + self.start_y
                 self.modules[(x, y)] = TensegrityModule(pos_x, pos_y, self.world, fixture, self.module_size,
                                                         self.modules)
+
+    def size(self):
+        return self.n_bodies_x * self.module_size, self.n_bodies_y * self.module_size
 
     def physics_step(self):
         pass
