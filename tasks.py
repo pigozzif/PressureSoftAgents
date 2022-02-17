@@ -173,25 +173,14 @@ class Escape(BaseEnv):
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(roof * 0.75, 1)))
         )
-        #self.world.CreateStaticBody(
-        #    position=(roof / 1.5, roof / 8),
-        #    allowSleep=True,
-        #    fixtures=b2FixtureDef(friction=0.8,
-        #                          shape=b2PolygonShape(box=(1, roof / 8)))
-        #)
-        #self.world.CreateStaticBody(
-        #    position=(- roof / 1.5, roof / 8),
-        #    fixtures=b2FixtureDef(friction=0.8,
-        #                          shape=b2PolygonShape(box=(1, roof / 8)))
-        #)
         self.world.CreateStaticBody(
-            position=(roof / 1.5, roof / 1.65),
+            position=(roof / 1.5, roof / 1.5),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, roof / 3)))
         )
         self.world.CreateStaticBody(
-            position=(- roof / 1.5, roof / 1.65),
+            position=(- roof / 1.5, roof / 1.5),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, roof / 3)))

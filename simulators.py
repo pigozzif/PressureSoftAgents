@@ -13,7 +13,7 @@ class BaseSimulator(abc.ABC):
 
     def __init__(self, args, solution):
         self.env = BaseEnv.create_env(args, self.get_world())
-        self.morphology = create_soft_body(args.body, self.env.get_initial_pos(), self.get_world())
+        self.morphology = create_soft_body(args, self.env.get_initial_pos(), self.get_world())
         self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
                                                            self.morphology.get_output_dim(), args.brain, solution)
         self.name = "{}-based Soft Body".format(args.body.capitalize())

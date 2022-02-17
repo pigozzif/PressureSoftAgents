@@ -36,7 +36,7 @@ class BaseController(abc.ABC):
         elif brain == "phase":
             return PressureSoftBody.n_masses + 2
         elif brain == "mlp":
-            return (PressureSoftBody.n_masses * 3 + 2) * PressureSoftBody.n_masses + PressureSoftBody.n_masses
+            return (PressureSoftBody.n_masses * 3 + 3) * (PressureSoftBody.n_masses + 1) + PressureSoftBody.n_masses + 1
         raise ValueError("Invalid controller name: {}".format(brain))
 
     @classmethod

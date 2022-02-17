@@ -28,7 +28,7 @@ if __name__ == "__main__":
     args = parse_arguments()
     set_seed(args.seed)
     n_params = BaseController.get_number_of_params_for_controller(args.brain)
-    file_name = os.path.join("output", ".".join([args.solver, str(args.seed), args.task.split("-")[0], "txt"]))
+    file_name = os.path.join(os.getcwd(), "output", ".".join([args.solver, str(args.seed), args.task.split("-")[0], "txt"]))
     if args.mode == "random":
         simulation(args, np.random.random(n_params), render=True)
     elif args.mode.startswith("opt"):

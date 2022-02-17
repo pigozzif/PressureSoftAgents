@@ -23,7 +23,8 @@ class Sensor(object):
         curr_pos = morphology.get_center_of_mass()
         obs = np.concatenate([np.array([min(len(mass.contacts), 1) for mass in morphology.masses]),
                               np.ravel([mass.position - curr_pos for mass in morphology.masses]),
-                              np.ravel([curr_pos - self._prev_pos]) / 8.0], axis=0)
+                              np.ravel([curr_pos - self._prev_pos]),
+                              np.array([morphology.pressure.current])], axis=0)
         self._prev_pos = curr_pos
         return self.normalize_obs(obs, morphology)
 
@@ -31,8 +32,10 @@ class Sensor(object):
         for i, o in enumerate(obs):
             if len(morphology.masses) <= i < len(obs) - 2:
                 obs[i] /= 5 * 1.75
-            elif i >= len(obs) - 2:
+            elif len(obs) - 3 <= i < len(obs) - 1:
                 obs[i] /= 8.0
+            elif i == len(obs) - 1:
+                obs[i] /= morphology.pressure.max
         self._realloc_memory(obs)
         obs = np.mean(self._memory, axis=0)
         return obs

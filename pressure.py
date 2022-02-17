@@ -3,8 +3,16 @@ import math
 import numpy as np
 from Box2D import b2FixtureDef, b2CircleShape, b2DistanceJointDef, b2Vec2, b2PolygonShape
 import matplotlib.path as path
+from dataclasses import dataclass
 
 from soft_body import BaseSoftBody, SpringData, Sensor
+
+
+@dataclass
+class PressureData(object):
+    current: float
+    min: float
+    max: float
 
 
 class PressureSoftBody(BaseSoftBody):
@@ -15,7 +23,7 @@ class PressureSoftBody(BaseSoftBody):
     T = 288.15
     nRT = n * R * T
 
-    def __init__(self, world, start_x, start_y):
+    def __init__(self, world, start_x, start_y, control_pressure=False):
         super(PressureSoftBody, self).__init__(world, start_x, start_y)
         fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
                                # shape=b2CircleShape(radius=0.5),
@@ -23,7 +31,10 @@ class PressureSoftBody(BaseSoftBody):
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
-        self.sensor = Sensor(self.n_masses * 3 + 2, 0.25 * 60, self)
+        self.sensor = Sensor(self.n_masses * 3 + 2 + 1, 0.25 * 60, self)
+        self.control_pressure = control_pressure
+        self.pressure = PressureData(self._compute_pressure([mass.position for mass in self.masses]), 0.0,
+                                     self.nRT / (math.pi * self.r * 2))
 
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
@@ -74,15 +85,20 @@ class PressureSoftBody(BaseSoftBody):
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
                              for ((x0, y0), (x1, y1)) in zip(positions, positions[1:] + [positions[0]])))
 
+    @staticmethod
+    def _compute_pressure(positions):
+        return PressureSoftBody.nRT / PressureSoftBody._get_area(positions)
+
     def physics_step(self):
         positions = [mass.position for mass in self.masses]
-        area = self._get_area(positions)
+        if not self.control_pressure:
+            self.pressure.current = self._compute_pressure(positions)
         polygon = path.Path(np.array(positions))
         for joint in self.joints:
             mass_a = joint.bodyA
             mass_b = joint.bodyB
             normal = self._get_normalized_normal(mass_a, mass_b, polygon)
-            pressure = (self.nRT / area) * joint.length
+            pressure = self.pressure.current * joint.length
             pressure /= 2
             pressure_force = normal * pressure
             mass_a.ApplyForceToCenter(pressure_force, True)
@@ -92,7 +108,15 @@ class PressureSoftBody(BaseSoftBody):
         return self.sensor.sense(self)
 
     def apply_control(self, control):
-        for force, joint in zip(control, self.joints):
+        start = 0
+        if self.control_pressure:
+            force = control[0]
+            if force >= 0:
+                self.pressure.current = self.pressure.current - (self.pressure.current - self.pressure.min) * force
+            else:
+                self.pressure.current = self.pressure.current + (self.pressure.max - self.pressure.current) * (- force)
+            start += 1
+        for force, joint in zip(control[start:], self.joints):
             data = joint.userData
             if force >= 0:
                 joint.length = data.rest_length - (data.rest_length - data.min) * force
@@ -100,7 +124,7 @@ class PressureSoftBody(BaseSoftBody):
                 joint.length = data.rest_length + (data.max - data.rest_length) * (- force)
 
     def get_output_dim(self):
-        return len(self.joints)
+        return len(self.joints) + (1 if self.control_pressure else 0)
 
     def get_center_of_mass(self):
         return np.mean([mass.position for mass in self.masses], axis=0)

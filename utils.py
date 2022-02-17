@@ -30,11 +30,11 @@ def create_solver(args, n_params):
     raise ValueError("Invalid solver name: {}".format(name))
 
 
-def create_soft_body(name, pos, world):
-    if name == "tensegrity":
+def create_soft_body(args, pos, world):
+    if args.body == "tensegrity":
         return TensegritySoftBody(world, pos[0], pos[1])
-    elif name == "pressure":
-        return PressureSoftBody(world, pos[0], pos[1])
-    elif name == "voxel":
+    elif args.body == "pressure":
+        return PressureSoftBody(world, pos[0], pos[1], control_pressure=args.task == "escape")
+    elif args.body == "voxel":
         return VoxelSoftBody(world, pos[0], pos[1])
-    raise ValueError("Invalid soft body name: {}".format(name))
+    raise ValueError("Invalid soft body name: {}".format(args.body))
