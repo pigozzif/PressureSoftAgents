@@ -24,10 +24,6 @@ class BaseEnv(abc.ABC):
     def get_reward(self, morphology, t):
         pass
 
-    #@abc.abstractmethod
-    #def should_step(self, agent):
-    #    pass
-
     @classmethod
     def create_env(cls, args, world):
         if args.task == "obstacles":
@@ -38,6 +34,8 @@ class BaseEnv(abc.ABC):
             env = HillyLocomotion(args, world)
         elif args.task == "escape":
             env = Escape(world)
+        elif args.task == "climber":
+            env = Climber(world)
         else:
             raise ValueError("Invalid task name: {}".format(args.task))
         env.init_env()
@@ -104,7 +102,7 @@ class FlatLocomotion(BaseEnv):
         return 0, 6
 
     def get_reward(self, morphology, t):
-        return morphology.get_center_of_mass()[0] / (t / 60.0)
+        return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
 
 class HillyLocomotion(BaseEnv):
@@ -161,7 +159,7 @@ class HillyLocomotion(BaseEnv):
         return 0, 10
 
     def get_reward(self, morphology, t):
-        return morphology.get_center_of_mass()[0] / (t / 60.0)
+        return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
 
 class Escape(BaseEnv):
@@ -194,4 +192,32 @@ class Escape(BaseEnv):
         return 0, 5
 
     def get_reward(self, morphology, t):
-        return abs(morphology.get_center_of_mass()[0])
+        return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]
+
+
+class Climber(BaseEnv):
+
+    def init_env(self):
+        self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
+        )
+        side = 6
+        height = 100
+        self.world.CreateStaticBody(
+            position=(side, height / 2),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, height / 2)))
+        )
+        self.world.CreateStaticBody(
+            position=(- side, height / 2),
+            allowSleep=True,
+            fixtures=b2FixtureDef(friction=0.8,
+                                  shape=b2PolygonShape(box=(1, height / 2)))
+        )
+
+    def get_initial_pos(self):
+        return 0, 5
+
+    def get_reward(self, morphology, t):
+        return abs(morphology.get_center_of_mass()[1]) - self.get_initial_pos()[1]

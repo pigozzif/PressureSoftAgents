@@ -24,7 +24,7 @@ def parse_arguments():
     parser.add_argument("--solver", type=str, default="ga", help="solver for optimization")
     parser.add_argument("--task", type=str, default="escape", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
-    parser.add_argument("--mode", default="best", type=str, help="run mode")
+    parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
     parser.add_argument("--evaluations", default=20000, type=int, help="number of solver evaluations")
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--np", type=int, default=8, help="number of parallel processes")

@@ -34,7 +34,7 @@ def create_soft_body(args, config, pos, world):
     if args.body == "tensegrity":
         return TensegritySoftBody(world, pos[0], pos[1])
     elif args.body == "pressure":
-        return PressureSoftBody(config, world, pos[0], pos[1], control_pressure=args.task == "escape")
+        return PressureSoftBody(config, world, pos[0], pos[1], control_pressure=True)  # args.task == "escape")
     elif args.body == "voxel":
         return VoxelSoftBody(world, pos[0], pos[1])
     raise ValueError("Invalid soft body name: {}".format(args.body))
