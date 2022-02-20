@@ -24,6 +24,10 @@ class BaseEnv(abc.ABC):
     def get_reward(self, morphology, t):
         pass
 
+    #@abc.abstractmethod
+    #def should_step(self, agent):
+    #    pass
+
     @classmethod
     def create_env(cls, args, world):
         if args.task == "obstacles":

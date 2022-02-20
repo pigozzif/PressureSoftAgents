@@ -3,11 +3,18 @@ import logging
 import os
 
 import numpy as np
+import yaml
 
 from controllers import BaseController
 from listener import FileListener
-from simulation import simulation, parallel_solve, solve
+from simulation import simulation, parallel_solve
 from utils import set_seed, create_solver
+
+
+def parse_config():
+    with open("config.yaml", "r") as yaml_file:
+        cfg = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    return cfg
 
 
 def parse_arguments():
@@ -26,21 +33,22 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
+    config = parse_config()
     set_seed(args.seed)
-    n_params = BaseController.get_number_of_params_for_controller(args.brain)
-    file_name = os.path.join(os.getcwd(), "output", ".".join([args.solver, str(args.seed), args.task.split("-")[0], "txt"]))
+    n_params = BaseController.get_number_of_params_for_controller(args.brain, config)
+    file_name = os.path.join(os.getcwd(), "output", ".".join([args.solver, str(args.seed), args.task.split("-")[0],
+                                                              "txt"]))
     if args.mode == "random":
-        simulation(args, np.random.random(n_params), render=True)
+        simulation(args, config, np.random.random(n_params), render=True)
     elif args.mode.startswith("opt"):
-        listener = FileListener(file_name, ["iteration", "evaluations", "best.fitness", "best.genotype"])
+        listener = FileListener(file_name, ["iteration", "elapsed.sec", "evaluations", "best.fitness", "best.genotype"])
         solver = create_solver(args, n_params)
-        if args.mode.endswith("parallel"):
-            best = parallel_solve(solver, args.evaluations // solver.popsize, args, listener)
-        else:
-            best = solve(solver, args.evaluations // solver.popsize, args, listener)
+        if not args.mode.endswith("parallel"):
+            args.np = 1
+        best = parallel_solve(solver, args.evaluations // solver.popsize, args, config, listener)
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif args.mode == "best":
         best = list(map(lambda x: float(x), open(file_name, "r").readlines()[-1].strip().split(";")[-1].split(",")))
-        print("fitness: {}".format(simulation(args, best, render=True)))
+        print("fitness: {}".format(simulation(args, config, best, render=True)))
     else:
         raise ValueError("Invalid mode: {}".format(args.mode))

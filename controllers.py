@@ -5,8 +5,6 @@ import random
 import numpy as np
 import torch
 
-from pressure import PressureSoftBody
-
 
 class BaseController(abc.ABC):
 
@@ -30,13 +28,13 @@ class BaseController(abc.ABC):
         pass
 
     @staticmethod
-    def get_number_of_params_for_controller(brain):
+    def get_number_of_params_for_controller(brain, config):
         if brain == "random":
             return 0
         elif brain == "phase":
-            return PressureSoftBody.n_masses + 2
+            return config["n_masses"] + 2
         elif brain == "mlp":
-            return (PressureSoftBody.n_masses * 3 + 3) * (PressureSoftBody.n_masses + 1) + PressureSoftBody.n_masses + 1
+            return (config["n_masses"] * 3 + 3) * (config["n_masses"] + 1) + config["n_masses"] + 1
         raise ValueError("Invalid controller name: {}".format(brain))
 
     @classmethod

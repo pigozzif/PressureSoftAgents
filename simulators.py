@@ -11,9 +11,9 @@ from utils import create_soft_body
 
 class BaseSimulator(abc.ABC):
 
-    def __init__(self, args, solution):
+    def __init__(self, args, config, solution):
         self.env = BaseEnv.create_env(args, self.get_world())
-        self.morphology = create_soft_body(args, self.env.get_initial_pos(), self.get_world())
+        self.morphology = create_soft_body(args, config, self.env.get_initial_pos(), self.get_world())
         self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
                                                            self.morphology.get_output_dim(), args.brain, solution)
         self.name = "{}-based Soft Body".format(args.body.capitalize())
@@ -35,6 +35,9 @@ class BaseSimulator(abc.ABC):
     def reset(self):
         pass
 
+    def should_step(self, args):
+        return self.get_step_count() < args.timesteps  # and self.env.should_step()
+
     def act(self, t):
         obs = self.morphology.get_obs()
         control = self.controller.control(t, obs)
@@ -43,9 +46,9 @@ class BaseSimulator(abc.ABC):
 
 class RenderSimulator(Framework, BaseSimulator):
 
-    def __init__(self, args, solution):
+    def __init__(self, args, config, solution):
         Framework.__init__(self)
-        BaseSimulator.__init__(self, args, solution)
+        BaseSimulator.__init__(self, args, config, solution)
         self.gui_table.updateGUI(self.settings)
         self.clock = pygame.time.Clock()
 
@@ -79,9 +82,9 @@ class RenderSimulator(Framework, BaseSimulator):
 
 class NoRenderSimulator(BaseSimulator, FrameworkBase):
 
-    def __init__(self, args, solution):
+    def __init__(self, args, config, solution):
         FrameworkBase.__init__(self)
-        BaseSimulator.__init__(self, args, solution)
+        BaseSimulator.__init__(self, args, config, solution)
         self.renderer = None
         self.world.renderer = self.renderer
         self.groundbody = self.world.CreateBody()

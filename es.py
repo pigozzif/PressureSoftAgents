@@ -38,58 +38,58 @@ class Optimizer(object):
         self.epsilon = epsilon
         self.t = 0
 
-    def update(self, globalg):
+    def update(self, glob_alg):
         self.t += 1
-        step = self._compute_step(globalg)
+        step = self._compute_step(glob_alg)
         theta = self.pi.mu
         ratio = np.linalg.norm(step) / (np.linalg.norm(theta) + self.epsilon)
         self.pi.mu = theta + step
         return ratio
 
-    def _compute_step(self, globalg):
+    def _compute_step(self, glob_alg):
         raise NotImplementedError
 
 
 class BasicSGD(Optimizer):
-    def __init__(self, pi, stepsize):
+    def __init__(self, pi, step_size):
         Optimizer.__init__(self, pi)
-        self.stepsize = stepsize
+        self.step_size = step_size
 
-    def _compute_step(self, globalg):
-        step = -self.stepsize * globalg
+    def _compute_step(self, glob_alg):
+        step = -self.step_size * glob_alg
         return step
 
 
 class SGD(Optimizer):
-    def __init__(self, pi, stepsize, momentum=0.9):
+    def __init__(self, pi, step_size, momentum=0.9):
         Optimizer.__init__(self, pi)
         self.v = np.zeros(self.dim, dtype=np.float32)
-        self.stepsize, self.momentum = stepsize, momentum
+        self.step_size, self.momentum = step_size, momentum
 
-    def _compute_step(self, globalg):
-        self.v = self.momentum * self.v + (1. - self.momentum) * globalg
-        step = -self.stepsize * self.v
+    def _compute_step(self, glob_alg):
+        self.v = self.momentum * self.v + (1. - self.momentum) * glob_alg
+        step = -self.step_size * self.v
         return step
 
 
 class Adam(Optimizer):
-    def __init__(self, pi, stepsize, beta1=0.99, beta2=0.999):
+    def __init__(self, pi, step_size, beta1=0.99, beta2=0.999):
         Optimizer.__init__(self, pi)
-        self.stepsize = stepsize
+        self.step_size = step_size
         self.beta1 = beta1
         self.beta2 = beta2
         self.m = np.zeros(self.dim, dtype=np.float32)
         self.v = np.zeros(self.dim, dtype=np.float32)
 
-    def _compute_step(self, globalg):
-        a = self.stepsize * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
-        self.m = self.beta1 * self.m + (1 - self.beta1) * globalg
-        self.v = self.beta2 * self.v + (1 - self.beta2) * (globalg * globalg)
+    def _compute_step(self, glob_alg):
+        a = self.step_size * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
+        self.m = self.beta1 * self.m + (1 - self.beta1) * glob_alg
+        self.v = self.beta2 * self.v + (1 - self.beta2) * (glob_alg * glob_alg)
         step = -a * self.m / (np.sqrt(self.v) + self.epsilon)
         return step
 
 
-class CMAES:
+class CMAES(object):
     """CMA-ES wrapper."""
 
     def __init__(self, num_params,  # number of model parameters
@@ -139,7 +139,7 @@ class CMAES:
         return r[0], -r[1], -r[1], r[6]
 
 
-class SimpleGA:
+class SimpleGA(object):
     """Simple Genetic Algorithm."""
 
     def __init__(self, num_params,  # number of model parameters
@@ -170,7 +170,7 @@ class SimpleGA:
         self.forget_best = forget_best
         self.weight_decay = weight_decay
 
-    def rms_stdev(self):
+    def rms_std(self):
         return self.sigma  # same sigma for all parameters.
 
     def ask(self):
@@ -244,7 +244,7 @@ class SimpleGA:
         return self.best_param, self.best_reward, self.curr_best_reward, self.sigma
 
 
-class OpenES:
+class OpenES(object):
     """ Basic Version of OpenAI Evolution Strategies."""
 
     def __init__(self, num_params,  # number of model parameters
@@ -287,7 +287,7 @@ class OpenES:
         # choose optimizer
         self.optimizer = Adam(self, learning_rate)
 
-    def rms_stdev(self):
+    def rms_std(self):
         sigma = self.sigma
         return np.mean(np.sqrt(sigma * sigma))
 
@@ -366,7 +366,7 @@ class OpenES:
         return self.best_mu, self.best_reward, self.curr_best_reward, self.sigma
 
 
-class PEPG:
+class PEPG(object):
     """Extension of PEPG with bells and whistles."""
 
     def __init__(self, num_params,  # number of model parameters
@@ -425,7 +425,7 @@ class PEPG:
         # choose optimizer
         self.optimizer = Adam(self, learning_rate)
 
-    def rms_stdev(self):
+    def rms_std(self):
         sigma = self.sigma
         return np.mean(np.sqrt(sigma * sigma))
 
@@ -512,10 +512,10 @@ class PEPG:
             stdev_reward = 1.0
             if not self.rank_fitness:
                 stdev_reward = reward.std()
-            S = ((epsilon * epsilon - (sigma * sigma).reshape(1, self.num_params)) / sigma.reshape(1, self.num_params))
+            s = ((epsilon * epsilon - (sigma * sigma).reshape(1, self.num_params)) / sigma.reshape(1, self.num_params))
             reward_avg = (reward[:self.batch_size] + reward[self.batch_size:]) / 2.0
-            rS = reward_avg - b
-            delta_sigma = (np.dot(rS, S)) / (2 * self.batch_size * stdev_reward)
+            r_s = reward_avg - b
+            delta_sigma = (np.dot(r_s, s)) / (2 * self.batch_size * stdev_reward)
 
             # adjust sigma according to the adaptive sigma calculation
             # for stability, don't let sigma move more than 10% of orig value
