@@ -17,15 +17,15 @@ class Sensor(object):
         self.dim = dim
         self.window_size = window_size
         self._memory = np.empty((0, dim))
-        self._prev_pos = morphology.get_center_of_mass()
+        self.prev_pos = morphology.get_center_of_mass()
 
     def sense(self, morphology):
         curr_pos = morphology.get_center_of_mass()
         obs = np.concatenate([np.array([min(len(mass.contacts), 1) for mass in morphology.masses]),
                               np.ravel([mass.position - curr_pos for mass in morphology.masses]),
-                              np.ravel([curr_pos - self._prev_pos]),
+                              np.ravel([curr_pos - self.prev_pos]),
                               np.array([morphology.pressure.current])], axis=0)
-        self._prev_pos = curr_pos
+        self.prev_pos = curr_pos
         return self.normalize_obs(obs, morphology)
 
     def normalize_obs(self, obs, morphology):

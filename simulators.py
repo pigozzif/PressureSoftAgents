@@ -1,5 +1,8 @@
 import abc
+import time
 
+import gym
+import numpy as np
 import pygame
 from Box2D.examples.framework import Framework
 from Box2D.examples.framework import FrameworkBase
@@ -12,12 +15,17 @@ from utils import create_soft_body
 class BaseSimulator(abc.ABC):
 
     def __init__(self, args, config, solution):
-        self.env = BaseEnv.create_env(args, self.get_world())
-        self.morphology = create_soft_body(args, config, self.env.get_initial_pos(), self.get_world())
-        self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
-                                                           self.morphology.get_output_dim(), args.brain, solution)
+        self.args = args
+        self.config = config
+        self.init_objects(solution)
         self.name = "{}-based Soft Body".format(args.body.capitalize())
         self.description = "Demonstration of a {}-based soft body simulation.".format(args.body)
+
+    def init_objects(self, solution):
+        self.env = BaseEnv.create_env(self.args, self.get_world())
+        self.morphology = create_soft_body(self.args, self.config, self.env.get_initial_pos(), self.get_world())
+        self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
+                                                           self.morphology.get_output_dim(), self.args.brain, solution)
 
     @abc.abstractmethod
     def get_world(self):
@@ -31,12 +39,20 @@ class BaseSimulator(abc.ABC):
     def step(self):
         pass
 
-    @abc.abstractmethod
     def reset(self):
-        pass
+        world = self.get_world()
+        world.contactListener = None
+        world.destructionListener = None
+        world.renderer = None
+        for body in world.bodies:
+            for fixture in body.fixtures:
+                body.DestroyFixture(fixture)
+            world.DestroyBody(body)
+        self.init_objects(np.concatenate([param.view(-1).detach() for param in self.controller.get_params()]))
+        return self.morphology.get_obs()
 
-    def should_step(self, args):
-        return self.get_step_count() < args.timesteps  # and self.env.should_step()
+    def should_step(self):
+        return self.get_step_count() < self.args.timesteps  # and self.env.should_step()
 
     def act(self, t):
         obs = self.morphology.get_obs()
@@ -69,11 +85,6 @@ class RenderSimulator(Framework, BaseSimulator):
         self.clock.tick(self.settings.hz)
         self.fps = self.clock.get_fps()
 
-    def reset(self):
-        self.world.contactListener = None
-        self.world.destructionListener = None
-        self.world.renderer = None
-
     def Step(self, settings):
         FrameworkBase.Step(self, settings)
         self.morphology.physics_step()
@@ -98,11 +109,6 @@ class NoRenderSimulator(BaseSimulator, FrameworkBase):
     def step(self):
         self.SimulationLoop()
 
-    def reset(self):
-        self.world.contactListener = None
-        self.world.destructionListener = None
-        self.world.renderer = None
-
     def SimulationLoop(self):
         self.Step(self.settings)
 
@@ -110,3 +116,51 @@ class NoRenderSimulator(BaseSimulator, FrameworkBase):
         FrameworkBase.Step(self, settings)
         self.morphology.physics_step()
         self.act(self.stepCount)
+
+
+class NoRenderRLSimulator(BaseSimulator, FrameworkBase, gym.Env):
+
+    def __init__(self, args, config, solution, listener):
+        FrameworkBase.__init__(self)
+        BaseSimulator.__init__(self, args, config, solution)
+        self.renderer = None
+        self.world.renderer = self.renderer
+        self.groundbody = self.world.CreateBody()
+        self.action_space = gym.spaces.Box(low=np.array([-1.0 for _ in range(self.morphology.get_output_dim())],
+                                                        dtype=np.float32),
+                                           high=np.array([1.0 for _ in range(self.morphology.get_output_dim())],
+                                                         dtype=np.float32))
+        self.observation_space = gym.spaces.Box(low=np.array([0.0 for _ in range(self.morphology.get_input_dim())],
+                                                             dtype=np.float32),
+                                                high=np.array([1.0 for _ in range(self.morphology.get_input_dim())],
+                                                              dtype=np.float32))
+        self.listener = listener
+        self.start = time.time()
+
+    def get_world(self):
+        return self.world
+
+    def get_step_count(self):
+        return self.stepCount
+
+    def step(self, action):
+        self.SimulationLoop()
+        obs = self.morphology.get_obs()
+        self.morphology.apply_control(action)
+        reward = self.env.get_reward(self.morphology, self.get_step_count())
+        self.listener.listen(**{"iteration": self.get_step_count(), "elapsed.sec": time.time() - self.start,
+                                "best.fitness": self.env.get_fitness(self.morphology, self.get_step_count())})
+        return obs, reward, False, {}
+
+    def render(self, mode="human"):
+        pass
+
+    def SimulationLoop(self):
+        self.Step(self.settings)
+
+    def Step(self, settings):
+        FrameworkBase.Step(self, settings)
+        self.morphology.physics_step()
+
+
+gym.envs.registration.register(id="RL-v0", entry_point="simulators:NoRenderRLSimulator", max_episode_steps=600)

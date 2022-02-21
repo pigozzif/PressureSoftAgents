@@ -21,7 +21,7 @@ class BaseEnv(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         pass
 
     @classmethod
@@ -80,7 +80,7 @@ class Obstacles(BaseEnv):
     def get_initial_pos(self):
         return 0, 100
 
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         return np.nan
 
 
@@ -101,7 +101,7 @@ class FlatLocomotion(BaseEnv):
     def get_initial_pos(self):
         return 0, 6
 
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
 
@@ -158,8 +158,11 @@ class HillyLocomotion(BaseEnv):
     def get_initial_pos(self):
         return 0, 10
 
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
+
+    def get_reward(self, morphology, t):
+        return morphology.get_center_of_mass()[0] - morphology.sensor.prev_pos[0]
 
 
 class Escape(BaseEnv):
@@ -191,7 +194,7 @@ class Escape(BaseEnv):
     def get_initial_pos(self):
         return 0, 5
 
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]
 
 
@@ -219,5 +222,5 @@ class Climber(BaseEnv):
     def get_initial_pos(self):
         return 0, 5
 
-    def get_reward(self, morphology, t):
+    def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[1]) - self.get_initial_pos()[1]

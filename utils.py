@@ -16,6 +16,10 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
+def random_solution(args):
+    return np.random.random(args.n_params)
+
+
 def create_solver(args, n_params):
     name = args.solver
     if name == "es":

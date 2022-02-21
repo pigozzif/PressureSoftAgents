@@ -16,6 +16,10 @@ class BaseController(abc.ABC):
         return "BaseController[input={},output={}]".format(self.input_dim, self.output_dim)
 
     @abc.abstractmethod
+    def get_params(self):
+        pass
+
+    @abc.abstractmethod
     def set_params(self, params):
         pass
 
@@ -59,6 +63,9 @@ class RandomController(BaseController):
     def __str__(self):
         return super(RandomController, self).__str__().replace("Base", "Random")
 
+    def get_params(self):
+        return np.empty(0)
+
     def set_params(self, params):
         pass
 
@@ -76,6 +83,9 @@ class PhaseController(BaseController):
         self.freq = random.random()
         self.ampl = random.random()
         self.phases = []
+
+    def get_params(self):
+        return np.concatenate([self.freq, self.ampl, self.phases])
 
     def set_params(self, params):
         self.freq = params[0]
@@ -99,6 +109,9 @@ class MLPController(BaseController):
 
     def __str__(self):
         return super(MLPController, self).__str__().replace("Base", "MLP")
+
+    def get_params(self):
+        return self.nn.parameters()
 
     def set_params(self, params):
         state_dict = self.nn.state_dict()
