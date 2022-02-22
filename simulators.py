@@ -145,11 +145,12 @@ class NoRenderRLSimulator(BaseSimulator, FrameworkBase, gym.Env):
 
     def step(self, action):
         self.SimulationLoop()
-        obs = self.morphology.get_obs()
         self.morphology.apply_control(action)
+        obs = self.morphology.get_obs()
         reward = self.env.get_reward(self.morphology, self.get_step_count())
-        self.listener.listen(**{"iteration": self.get_step_count(), "elapsed.sec": time.time() - self.start,
-                                "best.fitness": self.env.get_fitness(self.morphology, self.get_step_count())})
+        # if (self.get_step_count() + 1) % 120 == 0:
+        #     self.listener.listen(**{"iteration": self.get_step_count(), "elapsed.sec": time.time() - self.start,
+        #                          "best.fitness": self.env.get_fitness(self.morphology, self.get_step_count())})
         return obs, reward, False, {}
 
     def render(self, mode="human"):

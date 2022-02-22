@@ -161,9 +161,6 @@ class HillyLocomotion(BaseEnv):
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
-    def get_reward(self, morphology, t):
-        return morphology.get_center_of_mass()[0] - morphology.sensor.prev_pos[0]
-
 
 class Escape(BaseEnv):
 
