@@ -96,14 +96,12 @@ class PressureSoftBody(BaseSoftBody):
 
     def physics_step(self):
         positions = [mass.position for mass in self.masses]
-        if not self.control_pressure:
-            self.pressure.current = self._compute_pressure(positions)
         polygon = path.Path(np.array(positions))
         for joint in self.joints:
             mass_a = joint.bodyA
             mass_b = joint.bodyB
             normal = self._get_normalized_normal(mass_a, mass_b, polygon)
-            pressure = self.pressure.current * joint.length
+            pressure = self._compute_pressure(positions) * joint.length
             pressure /= 2
             pressure_force = normal * pressure
             mass_a.ApplyForceToCenter(pressure_force, True)
@@ -113,9 +111,7 @@ class PressureSoftBody(BaseSoftBody):
         return self.sensor.sense(self)
 
     def apply_control(self, control):
-        if self.control_pressure:
-            self.pressure.current = min(max(control[-1], self.pressure.min), self.pressure.max)
-        for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
+        for force, joint in zip(control, self.joints):
             data = joint.userData
             if force >= 0:
                 joint.length = data.rest_length - (data.rest_length - data.min) * force
