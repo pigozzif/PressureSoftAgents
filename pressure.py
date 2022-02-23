@@ -12,6 +12,7 @@ from soft_body import BaseSoftBody, SpringData, Sensor
 class PressureData(object):
     current: float
     min: float
+    mid: float
     max: float
 
 
@@ -35,8 +36,9 @@ class PressureSoftBody(BaseSoftBody):
         self.sensor = Sensor(self.n_masses * 3 + 2 + 1, 0.25 * 60, self)
         self.control_pressure = control_pressure
         max_p = self.nRT / (math.pi * self.r * 2)
-        self.pressure = PressureData(self._compute_pressure([mass.position for mass in self.masses]), max_p * 0.15,
-                                     max_p)
+        min_p = max_p * 0.2
+        self.pressure = PressureData(self._compute_pressure([mass.position for mass in self.masses]), min_p,
+                                     (max_p - min_p) / 2 + min_p, max_p)
 
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
@@ -113,7 +115,11 @@ class PressureSoftBody(BaseSoftBody):
     def apply_control(self, control):
         if self.control_pressure:
             force = control[0]
-            self.pressure.current = min(max(self.pressure.current + force * 100, self.pressure.min), self.pressure.max)
+            if force >= 0:
+                self.pressure.current = self.pressure.mid - 0.99 * ((self.pressure.mid - self.pressure.min) * force)
+            else:
+                self.pressure.current = self.pressure.mid + 0.99 * ((self.pressure.max - self.pressure.mid) * (- force))
+            # self.pressure.current = min(max(self.pressure.current + force * 100, self.pressure.min), self.pressure.max)
         for force, joint in zip(control[1 if self.control_pressure else 0:], self.joints):
             data = joint.userData
             if force >= 0:

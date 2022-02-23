@@ -13,7 +13,7 @@ class BaseController(abc.ABC):
         self.output_dim = output_dim
 
     def __str__(self):
-        return "BaseController[input={},output={}]".format(self.input_dim, self.output_dim)
+        return "BaseController[input_dim={},output_dim={}]".format(self.input_dim, self.output_dim)
 
     @abc.abstractmethod
     def get_params(self):
@@ -36,7 +36,7 @@ class BaseController(abc.ABC):
         if brain == "random":
             return 0
         elif brain == "phase":
-            return config["n_masses"] + 2
+            return config["n_masses"] + 1 + 2
         elif brain == "mlp":
             return (config["n_masses"] * 3 + 3) * (config["n_masses"] + 1) + config["n_masses"] + 1
         raise ValueError("Invalid controller name: {}".format(brain))
