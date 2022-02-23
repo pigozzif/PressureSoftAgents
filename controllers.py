@@ -103,7 +103,7 @@ class MLPController(BaseController):
 
     def __init__(self, input_dim, output_dim):
         super(MLPController, self).__init__(input_dim, output_dim)
-        self.joint_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
+        self.joint_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim),
                                             torch.nn.Tanh()
                                             )
 
