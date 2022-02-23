@@ -103,27 +103,42 @@ class MLPController(BaseController):
 
     def __init__(self, input_dim, output_dim):
         super(MLPController, self).__init__(input_dim, output_dim)
-        self.nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim),
-                                      torch.nn.Tanh()
-                                      )
+        self.joint_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
+                                            torch.nn.Tanh()
+                                            )
+        self.pressure_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=1),
+                                               torch.nn.Identity()
+                                               )
 
     def __str__(self):
         return super(MLPController, self).__str__().replace("Base", "MLP")
 
     def get_params(self):
-        return self.nn.parameters()
+        params = np.empty(0)
+        for _, p in self.joint_nn.parameters():
+            params = np.append(params, p.detach().numpy())
+        for _, p in self.pressure_nn.parameters():
+            params = np.append(params, p.detach().numpy())
+        return params
 
     def set_params(self, params):
-        state_dict = self.nn.state_dict()
+        state_dict = self.joint_nn.state_dict()
         start = 0
         for key, coeffs in state_dict.items():
             num = coeffs.numel()
             state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
             start += num
-        self.nn.load_state_dict(state_dict)
+        self.joint_nn.load_state_dict(state_dict)
+        state_dict = self.pressure_nn.state_dict()
+        for key, coeffs in state_dict.items():
+            num = coeffs.numel()
+            state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
+            start += num
+        self.pressure_nn.load_state_dict(state_dict)
 
     def control(self, t, obs):
-        return self.nn(torch.from_numpy(obs).float()).detach().numpy()
+        obs = torch.from_numpy(obs).float()
+        return np.concatenate([self.joint_nn(obs).detach().numpy(), self.pressure_nn(obs).detach().numpy()])
 
     def get_number_of_params(self):
         raise self.input_dim * self.output_dim + self.output_dim

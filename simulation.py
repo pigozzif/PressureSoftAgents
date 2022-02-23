@@ -9,7 +9,8 @@ def parallel_solve(solver, iterations, args, config, listener):
     num_workers = args.np
     if solver.popsize % num_workers != 0:
         raise RuntimeError("better to have n. workers divisor of pop size")
-    result = None
+    best_result = None
+    best_fitness = float("-inf")
     start_time = time.time()
     for j in range(iterations):
         solutions = solver.ask()
@@ -22,8 +23,11 @@ def parallel_solve(solver, iterations, args, config, listener):
             logging.warning("fitness at iteration {}: {}".format(j + 1, result[1]))
         listener.listen(**{"iteration": j, "elapsed.sec": time.time() - start_time,
                            "evaluations": j * solver.popsize, "best.fitness": result[1]})
-    listener.save_best(result[0])
-    return result
+        if result[1] >= best_fitness or best_result is None:
+            best_result = result[0]
+            best_fitness = result[1]
+            listener.save_best(best_result)
+    return best_result
 
 
 def parallel_wrapper(args):
