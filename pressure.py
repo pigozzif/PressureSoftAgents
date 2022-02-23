@@ -114,12 +114,7 @@ class PressureSoftBody(BaseSoftBody):
 
     def apply_control(self, control):
         if self.control_pressure:
-            force = control[-1]
-            # if force >= 0:
-            #     self.pressure.current = self.pressure.mid - 0.99 * ((self.pressure.mid - self.pressure.min) * force)
-            # else:
-            #     self.pressure.current = self.pressure.mid + 0.99 * ((self.pressure.max - self.pressure.mid) * (- force))
-            self.pressure.current = min(max(force, self.pressure.min), self.pressure.max)  # min(max(self.pressure.current + force * 100, self.pressure.min), self.pressure.max)
+            self.pressure.current = min(max(control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
             data = joint.userData
             if force >= 0:
