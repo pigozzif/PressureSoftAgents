@@ -21,7 +21,7 @@ def parse_arguments():
     parser.add_argument("--body", type=str, default="pressure", help="kind of soft body to simulate")
     parser.add_argument("--brain", type=str, default="mlp", help="kind of controller to simulate")
     parser.add_argument("--solver", type=str, default="cmaes", help="solver for optimization")
-    parser.add_argument("--task", type=str, default="escape", help="task to simulate")
+    parser.add_argument("--task", type=str, default="hilly-2-10", help="task to simulate")
     parser.add_argument("--timesteps", type=int, default=1800, help="number of time steps to simulate")
     parser.add_argument("--mode", default="opt-parallel", type=str, help="run mode")
     parser.add_argument("--evaluations", default=10000, type=int, help="number of solver evaluations")
