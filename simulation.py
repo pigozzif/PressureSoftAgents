@@ -27,7 +27,7 @@ def parallel_solve(solver, iterations, args, config, listener):
             best_result = result[0]
             best_fitness = result[1]
             listener.save_best(best_result)
-    return best_result
+    return best_result, best_fitness
 
 
 def parallel_wrapper(args):
