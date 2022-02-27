@@ -32,14 +32,14 @@ class BaseController(abc.ABC):
         pass
 
     @staticmethod
-    def get_number_of_params_for_controller(brain, config):
-        if brain == "random":
+    def get_number_of_params_for_controller(config):
+        if config["brain"] == "random":
             return 0
-        elif brain == "phase":
+        elif config["brain"] == "phase":
             return config["n_masses"] + 1 + 2
-        elif brain == "mlp":
+        elif config["brain"] == "mlp":
             return (config["n_masses"] * 3 + 3) * (config["n_masses"] + 1) + config["n_masses"] + 1
-        raise ValueError("Invalid controller name: {}".format(brain))
+        raise ValueError("Invalid controller name: {}".format(config.brain))
 
     @classmethod
     def create_controller(cls, input_dim, output_dim, brain, solution):

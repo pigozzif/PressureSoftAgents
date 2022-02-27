@@ -14,18 +14,18 @@ from utils import create_soft_body
 
 class BaseSimulator(abc.ABC):
 
-    def __init__(self, args, config, solution):
-        self.args = args
+    def __init__(self, config, solution):
         self.config = config
         self.init_objects(solution)
-        self.name = "{}-based Soft Body".format(args.body.capitalize())
-        self.description = "Demonstration of a {}-based soft body simulation.".format(args.body)
+        self.name = "{}-based Soft Body".format(config["body"].capitalize())
+        self.description = "Demonstration of a {}-based soft body simulation.".format(config["body"])
 
     def init_objects(self, solution):
-        self.env = BaseEnv.create_env(self.args, self.get_world())
-        self.morphology = create_soft_body(self.args, self.config, self.env.get_initial_pos(), self.get_world())
+        self.env = BaseEnv.create_env(self.config, self.get_world())
+        self.morphology = create_soft_body(self.config, self.env.get_initial_pos(), self.get_world())
         self.controller = BaseController.create_controller(self.morphology.get_input_dim(),
-                                                           self.morphology.get_output_dim(), self.args.brain, solution)
+                                                           self.morphology.get_output_dim(), self.config["brain"],
+                                                           solution)
 
     @abc.abstractmethod
     def get_world(self):
@@ -52,7 +52,7 @@ class BaseSimulator(abc.ABC):
         return self.morphology.get_obs()
 
     def should_step(self):
-        return self.get_step_count() < self.args.timesteps  # and self.env.should_step()
+        return self.get_step_count() < self.config["timesteps"]
 
     def act(self, t):
         obs = self.morphology.get_obs()
@@ -62,9 +62,9 @@ class BaseSimulator(abc.ABC):
 
 class RenderSimulator(Framework, BaseSimulator):
 
-    def __init__(self, args, config, solution):
+    def __init__(self, config, solution):
         Framework.__init__(self)
-        BaseSimulator.__init__(self, args, config, solution)
+        BaseSimulator.__init__(self, config, solution)
         self.gui_table.updateGUI(self.settings)
         self.clock = pygame.time.Clock()
 
@@ -93,9 +93,9 @@ class RenderSimulator(Framework, BaseSimulator):
 
 class NoRenderSimulator(BaseSimulator, FrameworkBase):
 
-    def __init__(self, args, config, solution):
+    def __init__(self, config, solution):
         FrameworkBase.__init__(self)
-        BaseSimulator.__init__(self, args, config, solution)
+        BaseSimulator.__init__(self, config, solution)
         self.renderer = None
         self.world.renderer = self.renderer
         self.groundbody = self.world.CreateBody()
@@ -120,9 +120,9 @@ class NoRenderSimulator(BaseSimulator, FrameworkBase):
 
 class NoRenderRLSimulator(BaseSimulator, FrameworkBase, gym.Env):
 
-    def __init__(self, args, config, solution, listener):
+    def __init__(self, config, solution, listener):
         FrameworkBase.__init__(self)
-        BaseSimulator.__init__(self, args, config, solution)
+        BaseSimulator.__init__(self, config, solution)
         self.renderer = None
         self.world.renderer = self.renderer
         self.groundbody = self.world.CreateBody()
@@ -148,9 +148,6 @@ class NoRenderRLSimulator(BaseSimulator, FrameworkBase, gym.Env):
         self.morphology.apply_control(action)
         obs = self.morphology.get_obs()
         reward = self.env.get_reward(self.morphology, self.get_step_count())
-        # if (self.get_step_count() + 1) % 120 == 0:
-        #     self.listener.listen(**{"iteration": self.get_step_count(), "elapsed.sec": time.time() - self.start,
-        #                          "best.fitness": self.env.get_fitness(self.morphology, self.get_step_count())})
         return obs, reward, False, {}
 
     def render(self, mode="human"):

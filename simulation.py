@@ -5,8 +5,8 @@ from multiprocessing import Pool
 from simulators import RenderSimulator, NoRenderSimulator
 
 
-def parallel_solve(solver, iterations, args, config, listener):
-    num_workers = args.np
+def parallel_solve(solver, iterations, config, listener):
+    num_workers = config["np"]
     if solver.popsize % num_workers != 0:
         raise RuntimeError("better to have n. workers divisor of pop size")
     best_result = None
@@ -15,7 +15,7 @@ def parallel_solve(solver, iterations, args, config, listener):
     for j in range(iterations):
         solutions = solver.ask()
         with Pool(num_workers) as pool:
-            results = pool.map(parallel_wrapper, [(args, config, solutions[i], i) for i in range(solver.popsize)])
+            results = pool.map(parallel_wrapper, [(config, solutions[i], i) for i in range(solver.popsize)])
         fitness_list = [value for _, value in sorted(results, key=lambda x: x[0])]
         solver.tell(fitness_list)
         result = solver.result()  # first element is the best solution, second element is the best fitness
@@ -31,16 +31,16 @@ def parallel_solve(solver, iterations, args, config, listener):
 
 
 def parallel_wrapper(args):
-    arguments, config, solution, i = args
-    fitness = simulation(arguments, config, solution, render=False)
+    config, solution, i = args
+    fitness = simulation(config, solution, render=False)
     return i, fitness
 
 
-def simulation(args, config, solution, render):
+def simulation(config, solution, render):
     if render:
-        framework = RenderSimulator(args, config, solution)
+        framework = RenderSimulator(config, solution)
     else:
-        framework = NoRenderSimulator(args, config, solution)
+        framework = NoRenderSimulator(config, solution)
     while framework.should_step():
         framework.step()
     return framework.env.get_fitness(framework.morphology, framework.get_step_count())

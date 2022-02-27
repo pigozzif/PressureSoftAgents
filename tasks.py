@@ -25,19 +25,19 @@ class BaseEnv(abc.ABC):
         pass
 
     @classmethod
-    def create_env(cls, args, world):
-        if args.task == "obstacles":
+    def create_env(cls, config, world):
+        if config["task"] == "obstacles":
             env = Obstacles(world)
-        elif args.task == "flat":
+        elif config["task"] == "flat":
             env = FlatLocomotion(world)
-        elif args.task.startswith("hilly"):
-            env = HillyLocomotion(args, world)
-        elif args.task == "escape":
-            env = Escape(world)
-        elif args.task == "climber":
+        elif config["task"].startswith("hilly"):
+            env = HillyLocomotion(config, world)
+        elif config["task"] == "escape":
+            env = Escape(world, config)
+        elif config["task"] == "climber":
             env = Climber(world)
         else:
-            raise ValueError("Invalid task name: {}".format(args.task))
+            raise ValueError("Invalid task name: {}".format(config["task"]))
         env.init_env()
         return env
 
@@ -107,11 +107,11 @@ class FlatLocomotion(BaseEnv):
 
 class HillyLocomotion(BaseEnv):
 
-    def __init__(self, args, world):
+    def __init__(self, config, world):
         BaseEnv.__init__(self, world)
-        self.h = int(args.task.split("-")[1])
-        self.w = int(args.task.split("-")[2])
-        self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(args.seed), "txt"]))
+        self.h = int(config["task"].split("-")[1])
+        self.w = int(config["task"].split("-")[2])
+        self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
 
     def init_env(self):
         self.world.CreateBody(
@@ -156,7 +156,7 @@ class HillyLocomotion(BaseEnv):
             file.write(content)
 
     def get_initial_pos(self):
-        return 0, 10
+        return 0, 15
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
@@ -164,32 +164,35 @@ class HillyLocomotion(BaseEnv):
 
 class Escape(BaseEnv):
 
+    def __init__(self, world, config):
+        BaseEnv.__init__(self, world)
+        self.side = config["r"] * 2
+
     def init_env(self):
         self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
         )
-        roof = 12
         self.world.CreateStaticBody(
-            position=(0, roof),
+            position=(0, self.side + self.side * 0.2),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(roof * 0.75, 1)))
+                                  shape=b2PolygonShape(box=(self.side, 1)))
         )
         self.world.CreateStaticBody(
-            position=(roof / 1.5, roof / 1.5),
+            position=(self.side - 0.8, self.side / 1.25),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 3)))
+                                  shape=b2PolygonShape(box=(1, self.side * 0.4)))
         )
         self.world.CreateStaticBody(
-            position=(- roof / 1.5, roof / 1.5),
+            position=(- self.side + 0.8, self.side / 1.25),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, roof / 3)))
+                                  shape=b2PolygonShape(box=(1, self.side * 0.4)))
         )
 
     def get_initial_pos(self):
-        return 0, 5
+        return 0, self.side / 2 + 1
 
     def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]

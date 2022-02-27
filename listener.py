@@ -20,8 +20,8 @@ class FileListener(object):
 
     @classmethod
     def get_log_file_name(cls, file_name):
-        return ".".join([os.path.join(os.getcwd(), "output", "logs", file_name), "txt"])
+        return ".".join([os.path.join(os.getcwd(), "output", "medium", "logs", file_name), "txt"])
 
     @classmethod
     def get_best_file_name(cls, file_name):
-        return ".".join([os.path.join(os.getcwd(), "output", "bests", file_name), "npy"])
+        return ".".join([os.path.join(os.getcwd(), "output", "medium", "bests", file_name), "npy"])
