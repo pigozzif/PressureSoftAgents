@@ -1,5 +1,7 @@
 import abc
 import time
+import os
+import shutil
 
 import gym
 import numpy as np
@@ -17,8 +19,8 @@ class BaseSimulator(abc.ABC):
     def __init__(self, config, solution):
         self.config = config
         self.init_objects(solution)
-        self.name = "{}-based Soft Body".format(config["body"].capitalize())
-        self.description = "Demonstration of a {}-based soft body simulation.".format(config["body"])
+        self.name = "{}-based Soft Agent".format(config["body"].capitalize())
+        self.description = "Demonstration of a {}-based soft agent simulation.".format(config["body"])
 
     def init_objects(self, solution):
         self.env = BaseEnv.create_env(self.config, self.get_world())
@@ -48,7 +50,7 @@ class BaseSimulator(abc.ABC):
             for fixture in body.fixtures:
                 body.DestroyFixture(fixture)
             world.DestroyBody(body)
-        self.init_objects(np.concatenate([param.view(-1).detach() for param in self.controller.get_params()]))
+#        self.init_objects(np.concatenate([param.view(-1).detach() for param in self.controller.get_params()]))
         return self.morphology.get_obs()
 
     def should_step(self):
@@ -62,11 +64,19 @@ class BaseSimulator(abc.ABC):
 
 class RenderSimulator(Framework, BaseSimulator):
 
-    def __init__(self, config, solution):
+    def __init__(self, config, solution, save_video=False):
         Framework.__init__(self)
         BaseSimulator.__init__(self, config, solution)
         self.gui_table.updateGUI(self.settings)
         self.clock = pygame.time.Clock()
+        if save_video:
+            self.save_dir = os.path.join(os.getcwd(), "frames")
+            if os.path.isdir(self.save_dir):
+                shutil.rmtree(self.save_dir)
+            os.mkdir(self.save_dir)
+        else:
+            self.save_dir = None
+        self.frame_rate = 3
 
     def get_world(self):
         return self.world
@@ -81,14 +91,35 @@ class RenderSimulator(Framework, BaseSimulator):
         self.SimulationLoop()
         if self.settings.drawMenu:
             self.gui_app.paint(self.screen)
+        #self._scroll()
         pygame.display.flip()
         self.clock.tick(self.settings.hz)
         self.fps = self.clock.get_fps()
+        if self.save_dir is not None and self.get_step_count() % self.frame_rate == 0:
+            pygame.image.save(self.screen, os.path.join(self.save_dir, ".".join([str(self.get_step_count()), "jpg"])))
+
+    def _scroll(self):
+        self.viewCenter += self.morphology.get_center_of_mass() - self.viewCenter
 
     def Step(self, settings):
+        settings.drawMenu = False
+        settings.drawStats = False
+        settings.drawFPS = False
         FrameworkBase.Step(self, settings)
         self.morphology.physics_step()
         self.act(self.stepCount)
+
+    def reset(self):
+        out = super(RenderSimulator, self).reset()
+        if self.save_dir is not None:
+            self._save_video()
+            shutil.rmtree(self.save_dir)
+        return out
+
+    def _save_video(self):
+        import imageio
+        images = [imageio.imread(os.path.join(self.save_dir, img)) for img in sorted(os.listdir(self.save_dir))]
+        imageio.mimsave("movie.gif", images)
 
 
 class NoRenderSimulator(BaseSimulator, FrameworkBase):

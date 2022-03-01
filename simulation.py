@@ -38,9 +38,11 @@ def parallel_wrapper(args):
 
 def simulation(config, solution, render):
     if render:
-        framework = RenderSimulator(config, solution)
+        framework = RenderSimulator(config, solution, save_video=int(config["save_video"]))
     else:
         framework = NoRenderSimulator(config, solution)
     while framework.should_step():
         framework.step()
-    return framework.env.get_fitness(framework.morphology, framework.get_step_count())
+    fitness = framework.env.get_fitness(framework.morphology, framework.get_step_count())
+    framework.reset()
+    return fitness

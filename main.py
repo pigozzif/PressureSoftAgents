@@ -23,14 +23,14 @@ if __name__ == "__main__":
     if config["mode"] == "random":
         print("fitness: {}".format(simulation(config, random_solution(config), render=True)))
     elif config["mode"].startswith("opt"):
-        listener = FileListener(file_name, ["iteration", "elapsed.sec", "evaluations", "best.fitness"])
+        listener = FileListener(file_name, config["size"], ["iteration", "elapsed.sec", "evaluations", "best.fitness"])
         solver = create_solver(config)
         if not config["mode"].endswith("parallel"):
             config["np"] = 1
         best = parallel_solve(solver, config["evaluations"] // solver.popsize, config, listener)
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif config["mode"] == "best":
-        best = np.load(FileListener.get_best_file_name(file_name))
+        best = np.load(FileListener.get_best_file_name(file_name, config["size"]))
         print("fitness: {}".format(simulation(config, best, render=True)))
     else:
         raise ValueError("Invalid mode: {}".format(config["mode"]))
