@@ -2,6 +2,8 @@ import logging
 import time
 from multiprocessing import Pool
 
+import numpy as np
+
 from simulators import RenderSimulator, NoRenderSimulator
 
 
@@ -40,9 +42,26 @@ def simulation(config, solution, render):
     if render:
         framework = RenderSimulator(config, solution, save_video=int(config["save_video"]))
     else:
-        framework = NoRenderSimulator(config, solution)
+        framework = NoRenderSimulator(config, solution, save_video=int(config["save_video"]))
     while framework.should_step():
         framework.step()
     fitness = framework.env.get_fitness(framework.morphology, framework.get_step_count())
     framework.reset()
     return fitness
+
+
+def inflate_simulation(config, listener, render):
+    solution = np.empty(0)
+    if render:
+        framework = RenderSimulator(config, solution, save_video=int(config["save_video"]))
+    else:
+        framework = NoRenderSimulator(config, solution, save_video=int(config["save_video"]))
+    framework.morphology.pressure.min = 0
+    framework.morphology.pressure.current = 0
+    while framework.should_step():
+        framework.step()
+        # area = framework.morphology.get_area()
+        # if framework.get_step_count() > 360:
+        #     listener.listen(**{"t": framework.get_step_count(), "p": framework.morphology.pressure.current,
+        #                     "a": area, "r": area / (config["r"] ** 2 * math.pi)})
+    framework.reset()

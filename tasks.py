@@ -11,6 +11,7 @@ class BaseEnv(abc.ABC):
 
     def __init__(self, world):
         self.world = world
+        self.bodies = []
 
     @abc.abstractmethod
     def init_env(self):
@@ -29,7 +30,7 @@ class BaseEnv(abc.ABC):
         if config["task"] == "obstacles":
             env = Obstacles(world)
         elif config["task"] == "flat":
-            env = FlatLocomotion(world)
+            env = FlatLocomotion(config, world)
         elif config["task"].startswith("hilly"):
             env = HillyLocomotion(config, world)
         elif config["task"] == "escape":
@@ -45,9 +46,10 @@ class BaseEnv(abc.ABC):
 class Obstacles(BaseEnv):
 
     def init_env(self):
-        self.world.CreateBody(
+        ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
         )
+        self.bodies.append(ground)
         box1 = self.world.CreateStaticBody(
             position=(0, 75),
             allowSleep=True,
@@ -56,7 +58,7 @@ class Obstacles(BaseEnv):
                                   ))
         box1.fixedRotation = True
         box1.angle = -25 * math.pi / 180.0
-
+        self.bodies.append(box1)
         box2 = self.world.CreateStaticBody(
             position=(55, 55),
             allowSleep=True,
@@ -65,7 +67,7 @@ class Obstacles(BaseEnv):
                                   ))
         box2.fixedRotation = True
         box2.angle = 45 * math.pi / 180.0
-
+        self.bodies.append(box2)
         box3 = self.world.CreateStaticBody(
             position=(0, 0),
             allowSleep=True,
@@ -76,6 +78,7 @@ class Obstacles(BaseEnv):
                                                                  ]
                                                        )))
         box3.fixedRotation = True
+        self.bodies.append(box3)
 
     def get_initial_pos(self):
         return 0, 100
@@ -86,6 +89,10 @@ class Obstacles(BaseEnv):
 
 class FlatLocomotion(BaseEnv):
 
+    def __init__(self, config, world):
+        BaseEnv.__init__(self, world)
+        self.r = config["r"]
+
     def init_env(self):
         ground = self.world.CreateStaticBody(
             position=(492.5, 0),
@@ -94,12 +101,14 @@ class FlatLocomotion(BaseEnv):
                                   shape=b2PolygonShape(box=(500, 10))),
         )
         ground.angle = 1 * math.pi / 180
-        self.world.CreateBody(
+        self.bodies.append(ground)
+        wall = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
         )
+        self.bodies.append(wall)
 
     def get_initial_pos(self):
-        return 0, 6
+        return self.r, self.r
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
@@ -114,15 +123,17 @@ class HillyLocomotion(BaseEnv):
         self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
 
     def init_env(self):
-        self.world.CreateBody(
+        ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-20, 100), (-20, -100)])
         )
         if not os.path.isfile(self.file_name):
             self._write_terrain()
         start = self._read_terrain()
-        self.world.CreateBody(
+        wall = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(start, 100), (start, -100)])
         )
+        self.bodies.append(ground)
+        self.bodies.append(wall)
 
     def _read_terrain(self):
         with open(self.file_name, "r") as file:
@@ -130,13 +141,14 @@ class HillyLocomotion(BaseEnv):
             for line in file:
                 start, end, height, prev_height = tuple(map(lambda x: float(x), line.split(";")))
                 half_x, y = (end - start) / 2, 0
-                self.world.CreateStaticBody(
+                bump = self.world.CreateStaticBody(
                     position=(half_x + start, y),
                     allowSleep=True,
                     fixtures=b2FixtureDef(friction=0.8,
                                           shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
                                                                          (- half_x, -100), (half_x, -100)])),
                 )
+                self.bodies.append(bump)
         return start
 
     def _write_terrain(self):
@@ -169,27 +181,31 @@ class Escape(BaseEnv):
         self.side = config["r"] * 2
 
     def init_env(self):
-        self.world.CreateBody(
+        ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
         )
-        self.world.CreateStaticBody(
+        self.bodies.append(ground)
+        roof = self.world.CreateStaticBody(
             position=(0, self.side + self.side * 0.2),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(self.side, 1)))
         )
-        self.world.CreateStaticBody(
+        self.bodies.append(roof)
+        wall = self.world.CreateStaticBody(
             position=(self.side - 0.8, self.side / 1.25),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, self.side * 0.4)))
         )
-        self.world.CreateStaticBody(
+        self.bodies.append(wall)
+        wall = self.world.CreateStaticBody(
             position=(- self.side + 0.8, self.side / 1.25),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, self.side * 0.4)))
         )
+        self.bodies.append(wall)
 
     def get_initial_pos(self):
         return 0, self.side / 2 + 1
@@ -201,23 +217,26 @@ class Escape(BaseEnv):
 class Climber(BaseEnv):
 
     def init_env(self):
-        self.world.CreateBody(
+        ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
         )
+        self.bodies.append(ground)
         side = 6
         height = 100
-        self.world.CreateStaticBody(
+        wall = self.world.CreateStaticBody(
             position=(side, height / 2),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, height / 2)))
         )
-        self.world.CreateStaticBody(
+        self.bodies.append(wall)
+        wall = self.world.CreateStaticBody(
             position=(- side, height / 2),
             allowSleep=True,
             fixtures=b2FixtureDef(friction=0.8,
                                   shape=b2PolygonShape(box=(1, height / 2)))
         )
+        self.bodies.append(wall)
 
     def get_initial_pos(self):
         return 0, 5

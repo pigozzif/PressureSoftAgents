@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from Box2D import b2FixtureDef, b2DistanceJointDef, b2Vec2, b2PolygonShape
+from Box2D import b2FixtureDef, b2DistanceJointDef, b2Vec2, b2PolygonShape, b2CircleShape
 import matplotlib.path as path
 from dataclasses import dataclass
 
@@ -28,17 +28,20 @@ class PressureSoftBody(BaseSoftBody):
         self.n = self.mass * self.mol
         self.T = config["T"]
         self.nRT = self.n * self.R * self.T
-        fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
+        fixture = b2FixtureDef(shape=b2CircleShape(radius=math.sqrt(1 / math.pi)),  # shape=b2PolygonShape(box=(0.5, 0.5)),
                                density=2500, friction=10.0)
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
         self.sensor = Sensor(self.n_masses * 3 + 2 + 1, 0.25 * 60, self)
         self.control_pressure = control_pressure
-        max_p = self.nRT / (math.pi * self.r * 2)
-        min_p = max_p * 0.2
-        self.pressure = PressureData(self._compute_pressure([mass.position for mass in self.masses]), min_p,
-                                     (max_p - min_p) / 2 + min_p, max_p)
+        max_p = self.get_maximum_pressure(self.T, self.mass, self.r)
+        min_p = max_p * 0.15
+        self.pressure = PressureData(self._compute_pressure(), min_p, (max_p - min_p) / 2 + min_p, max_p)
+
+    @staticmethod
+    def get_maximum_pressure(T, mass, r):
+        return ((PressureSoftBody.R * T * mass * PressureSoftBody.mol) / (r ** 2 * math.pi)) * 1.25
 
     def _add_masses(self, fixture):
         delta_theta = (360 * math.pi / 180) / self.n_masses
@@ -48,7 +51,8 @@ class PressureSoftBody(BaseSoftBody):
             x = self.r * math.cos(theta) + self.start_x
             y = self.r * math.sin(theta) + self.start_y
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
-            mass.angle = theta
+            # mass.angle = theta
+            mass.fixedRotation = True
             if prev_mass is not None:
                 self._add_joint(prev_mass, mass)
             theta += delta_theta
@@ -86,18 +90,18 @@ class PressureSoftBody(BaseSoftBody):
         a = (polygon.contains_point(point1, radius=0.001) or polygon.contains_point(point1, radius=-0.001))
         return normal2 if a else normal1
 
-    @staticmethod
-    def _get_area(positions):
+    def get_area(self):
+        positions = [mass.position for mass in self.masses]
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
                              for ((x0, y0), (x1, y1)) in zip(positions, positions[1:] + [positions[0]])))
 
-    def _compute_pressure(self, positions):
-        return self.nRT / PressureSoftBody._get_area(positions)
+    def _compute_pressure(self):
+        return self.nRT / self.get_area()
 
     def physics_step(self):
         positions = [mass.position for mass in self.masses]
         if not self.control_pressure:
-            self.pressure.current = self._compute_pressure(positions)
+            self.pressure.current = self._compute_pressure()
         polygon = path.Path(np.array(positions))
         for joint in self.joints:
             mass_a = joint.bodyA
@@ -114,7 +118,7 @@ class PressureSoftBody(BaseSoftBody):
 
     def apply_control(self, control):
         if self.control_pressure:
-            self.pressure.current = min(max(control[-1], self.pressure.min), self.pressure.max)
+            self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
             data = joint.userData
             if force >= 0:

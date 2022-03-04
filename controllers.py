@@ -5,6 +5,8 @@ import random
 import numpy as np
 import torch
 
+from pressure import PressureSoftBody
+
 
 class BaseController(abc.ABC):
 
@@ -37,16 +39,22 @@ class BaseController(abc.ABC):
             return 0
         elif config["brain"] == "phase":
             return config["n_masses"] + 1 + 2
+        elif config["brain"] == "inflate":
+            return 0
         elif config["brain"] == "mlp":
             return (config["n_masses"] * 3 + 3) * (config["n_masses"] + 1) + config["n_masses"] + 1
         raise ValueError("Invalid controller name: {}".format(config.brain))
 
     @classmethod
-    def create_controller(cls, input_dim, output_dim, brain, solution):
+    def create_controller(cls, config, input_dim, output_dim, brain, solution):
         if brain == "random":
             controller = RandomController(input_dim, output_dim)
         elif brain == "phase":
             controller = PhaseController(input_dim, output_dim)
+        elif brain == "inflate":
+            controller = InflateController(input_dim, output_dim,
+                                           PressureSoftBody.get_maximum_pressure(config["T"],
+                                                                                 config["mass"], config["r"]) / 100)
         elif brain == "mlp":
             controller = MLPController(input_dim, output_dim)
         else:
@@ -58,7 +66,7 @@ class BaseController(abc.ABC):
 class RandomController(BaseController):
 
     def __init__(self, input_dim, output_dim):
-        super(RandomController, self).__init__(input_dim, output_dim)
+        BaseController.__init__(self, input_dim, output_dim)
 
     def __str__(self):
         return super(RandomController, self).__str__().replace("Base", "Random")
@@ -79,7 +87,7 @@ class RandomController(BaseController):
 class PhaseController(BaseController):
 
     def __init__(self, input_dim, output_dim):
-        super(PhaseController, self).__init__(input_dim, output_dim)
+        BaseController.__init__(self, input_dim, output_dim)
         self.freq = random.random()
         self.ampl = random.random()
         self.phases = []
@@ -99,10 +107,31 @@ class PhaseController(BaseController):
         return self.output_dim + 2
 
 
+class InflateController(BaseController):
+
+    def __init__(self, input_dim, output_dim, delta_p):
+        BaseController.__init__(self, input_dim, output_dim)
+        self.delta_p = delta_p
+
+    def get_params(self):
+        return np.empty(0)
+
+    def set_params(self, params):
+        pass
+
+    def control(self, t, obs):
+        if t < 360:
+            return np.zeros(self.output_dim)
+        return np.array([0 if i < self.output_dim - 1 else self.delta_p for i in range(self.output_dim)])
+
+    def get_number_of_params(self):
+        return 0
+
+
 class MLPController(BaseController):
 
     def __init__(self, input_dim, output_dim):
-        super(MLPController, self).__init__(input_dim, output_dim)
+        BaseController.__init__(self, input_dim, output_dim)
         self.joint_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
                                             torch.nn.Tanh()
                                             )
