@@ -8,7 +8,6 @@ import numpy as np
 import pygame
 from Box2D.examples.framework import Framework
 from Box2D.examples.framework import FrameworkBase
-from PIL import Image, ImageDraw
 
 from controllers import BaseController
 from tasks import BaseEnv
@@ -27,7 +26,9 @@ class BaseSimulator(abc.ABC):
             if os.path.isdir(self.save_dir):
                 shutil.rmtree(self.save_dir)
             os.mkdir(self.save_dir)
-            self.screen = np.zeros((500, 500, 3))
+            pygame.init()
+            self.screen = pygame.Surface((500, 500))
+            self.screen.fill((0, 0, 0))
         else:
             self.save_dir = None
         self.frame_rate = 3
@@ -72,9 +73,7 @@ class BaseSimulator(abc.ABC):
         return self.morphology.get_obs()
 
     def _draw_image(self, file_name):
-        image = Image.new("RGB", self.screen.shape[:-1], color="black")
-        draw = ImageDraw.Draw(image)
-        w, h, _ = self.screen.shape
+        w, h = self.screen.get_width(), self.screen.get_height()
         center_x, center_y = self.morphology.get_center_of_mass()
         for body in self.env.bodies:
             vertices = body.fixtures[0].shape.vertices
@@ -82,7 +81,7 @@ class BaseSimulator(abc.ABC):
                                  (vertices[0][1] - center_y) * self.magnify + h / 2, \
                                  (vertices[1][0] - center_x) * self.magnify + w / 2, \
                                  (vertices[1][1] - center_y) * self.magnify + h / 2
-            draw.line([l_x, self.screen.shape[1] - l_y, r_x, self.screen.shape[1] - r_y], fill="green")
+            pygame.draw.lines(self.screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 1)
         for mass in self.morphology.masses:
             shape = mass.fixtures[0].shape
             half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
@@ -91,17 +90,19 @@ class BaseSimulator(abc.ABC):
             vertices = [(cx - half_width, cy - half_height), (cx + half_width, cy - half_height),
                         (cx + half_width, cy + half_height), (cx - half_width, cy + half_height)]
             new_vertices = [
-                ((x - center_x) * self.magnify + w / 2, self.screen.shape[1] - ((y - center_y) * self.magnify + h / 2)) for
+                ((x - center_x) * self.magnify + w / 2, h - ((y - center_y) * self.magnify + h / 2)) for
                 x, y in vertices]
-            draw.polygon(new_vertices, fill="green")
+            pygame.draw.rect(self.screen, (255, 0, 0),
+                             (new_vertices[3][0], new_vertices[3][1],
+                              half_width * 2 * self.magnify, half_height * 2 * self.magnify), 0)
         for joint in self.morphology.joints:
             l_x, l_y, r_x, r_y = (joint.anchorA.x - center_x) * self.magnify + w / 2, \
                                  (joint.anchorA.y - center_y) * self.magnify + h / 2, \
                                  (joint.anchorB.x - center_x) * self.magnify + w / 2, \
                                  (joint.anchorB.y - center_y) * self.magnify + h / 2
-            draw.line([l_x, self.screen.shape[1] - l_y, r_x, self.screen.shape[1] - r_y], fill="white")
-        image.save(file_name)
-        self.screen.fill(0)
+            pygame.draw.lines(self.screen, (255, 255, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 1)
+        pygame.image.save(self.screen, file_name)
+        self.screen.fill((0, 0, 0))
 
     def _save_video(self):
         import imageio
@@ -139,7 +140,6 @@ class RenderSimulator(Framework, BaseSimulator):
         self.SimulationLoop()
         if self.settings.drawMenu:
             self.gui_app.paint(self.screen)
-        # self._scroll()
         pygame.display.flip()
         self.clock.tick(self.settings.hz)
         self.fps = self.clock.get_fps()

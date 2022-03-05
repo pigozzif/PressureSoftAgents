@@ -141,13 +141,6 @@ class HillyLocomotion(BaseEnv):
             for line in file:
                 start, end, height, prev_height = tuple(map(lambda x: float(x), line.split(";")))
                 half_x, y = (end - start) / 2, 0
-                # bump = self.world.CreateStaticBody(
-                #     position=(half_x + start, y),
-                #     allowSleep=True,
-                #     fixtures=b2FixtureDef(friction=0.8,
-                #                           shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
-                #                                                          (- half_x, -100), (half_x, -100)])),
-                # )
                 bump = self.world.CreateBody(
                     shapes=b2EdgeShape(vertices=[(end, y + height), (start, y + prev_height)])
                 )
