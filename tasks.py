@@ -141,12 +141,15 @@ class HillyLocomotion(BaseEnv):
             for line in file:
                 start, end, height, prev_height = tuple(map(lambda x: float(x), line.split(";")))
                 half_x, y = (end - start) / 2, 0
-                bump = self.world.CreateStaticBody(
-                    position=(half_x + start, y),
-                    allowSleep=True,
-                    fixtures=b2FixtureDef(friction=0.8,
-                                          shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
-                                                                         (- half_x, -100), (half_x, -100)])),
+                # bump = self.world.CreateStaticBody(
+                #     position=(half_x + start, y),
+                #     allowSleep=True,
+                #     fixtures=b2FixtureDef(friction=0.8,
+                #                           shape=b2PolygonShape(vertices=[(half_x, height), (- half_x, prev_height),
+                #                                                          (- half_x, -100), (half_x, -100)])),
+                # )
+                bump = self.world.CreateBody(
+                    shapes=b2EdgeShape(vertices=[(end, y + height), (start, y + prev_height)])
                 )
                 self.bodies.append(bump)
         return start
@@ -178,37 +181,50 @@ class Escape(BaseEnv):
 
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
-        self.side = config["r"] * 2
+        self.side = config["r"] * 2.25
 
     def init_env(self):
         ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
         )
         self.bodies.append(ground)
-        roof = self.world.CreateStaticBody(
-            position=(0, self.side + self.side * 0.2),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(self.side, 1)))
+        roof1 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(- self.side / 2, self.side), (self.side / 2, self.side)])
         )
-        self.bodies.append(roof)
-        wall = self.world.CreateStaticBody(
-            position=(self.side - 0.8, self.side / 1.25),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, self.side * 0.4)))
+        self.bodies.append(roof1)
+        roof2 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(- self.side / 2 - 1, self.side + 1), (self.side / 2 + 1, self.side + 1)])
         )
-        self.bodies.append(wall)
-        wall = self.world.CreateStaticBody(
-            position=(- self.side + 0.8, self.side / 1.25),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(1, self.side * 0.4)))
+        self.bodies.append(roof2)
+        aperture = self.side / 3
+        wall1 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(- self.side / 2, self.side), (- self.side / 2, aperture)])
         )
-        self.bodies.append(wall)
+        self.bodies.append(wall1)
+        wall2 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(- self.side / 2 - 1, self.side + 1), (- self.side / 2 - 1, aperture)])
+        )
+        self.bodies.append(wall2)
+        wall3 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(self.side / 2, self.side), (self.side / 2, aperture)])
+        )
+        self.bodies.append(wall3)
+        wall4 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(self.side / 2 + 1, self.side + 1), (self.side / 2 + 1, aperture)])
+        )
+        self.bodies.append(wall4)
+        self.bodies.append(wall2)
+        wall5 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[( - self.side / 2 - 1, aperture), (- self.side / 2, aperture)])
+        )
+        self.bodies.append(wall5)
+        wall6 = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(self.side / 2, aperture), (self.side / 2 + 1, aperture)])
+        )
+        self.bodies.append(wall6)
 
     def get_initial_pos(self):
-        return 0, self.side / 2 + 1
+        return 0, self.side / 2
 
     def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]

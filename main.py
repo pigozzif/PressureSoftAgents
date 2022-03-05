@@ -21,7 +21,7 @@ if __name__ == "__main__":
     config["n_params"] = BaseController.get_number_of_params_for_controller(config)
     file_name = ".".join([config["solver"], str(config["seed"]), config["task"].split("-")[0], config["brain"]])
     if config["mode"] == "random":
-        print("fitness: {}".format(simulation(config, random_solution(config), render=False)))
+        print("fitness: {}".format(simulation(config, random_solution(config), render=not config["save_video"])))
     elif config["mode"].startswith("opt"):
         listener = FileListener(file_name, config["size"], ["iteration", "elapsed.sec", "evaluations", "best.fitness"])
         solver = create_solver(config)

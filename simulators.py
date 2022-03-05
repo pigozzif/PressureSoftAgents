@@ -31,7 +31,7 @@ class BaseSimulator(abc.ABC):
         else:
             self.save_dir = None
         self.frame_rate = 3
-        self.mult = 12
+        self.magnify = 12
 
     def init_objects(self, solution):
         self.env = BaseEnv.create_env(self.config, self.get_world())
@@ -72,39 +72,33 @@ class BaseSimulator(abc.ABC):
         return self.morphology.get_obs()
 
     def _draw_image(self, file_name):
-        image = Image.new("RGBA", self.screen.shape[:-1], color="black")
+        image = Image.new("RGB", self.screen.shape[:-1], color="black")
         draw = ImageDraw.Draw(image)
         w, h, _ = self.screen.shape
         center_x, center_y = self.morphology.get_center_of_mass()
         for body in self.env.bodies:
             vertices = body.fixtures[0].shape.vertices
-            new_vertices = [((x - center_x) * self.mult + w / 2,
-                             ((y - center_y) * self.mult - h / 2)) for x, y in vertices]
-            draw.polygon(new_vertices, fill="green")
-            break
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * self.magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * self.magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * self.magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * self.magnify + h / 2
+            draw.line([l_x, self.screen.shape[1] - l_y, r_x, self.screen.shape[1] - r_y], fill="green")
         for mass in self.morphology.masses:
-            vertices = mass.fixtures[0].shape.vertices
+            shape = mass.fixtures[0].shape
+            half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
+            half_height = abs(shape.vertices[0][1] - shape.vertices[2][1]) / 2
+            cx, cy = mass.position.x, mass.position.y
+            vertices = [(cx - half_width, cy - half_height), (cx + half_width, cy - half_height),
+                        (cx + half_width, cy + half_height), (cx - half_width, cy + half_height)]
             new_vertices = [
-                ((x - center_x) * self.mult + w / 2, self.screen.shape[1] - ((y - center_y) * self.mult + h / 2)) for
+                ((x - center_x) * self.magnify + w / 2, self.screen.shape[1] - ((y - center_y) * self.magnify + h / 2)) for
                 x, y in vertices]
             draw.polygon(new_vertices, fill="green")
-            continue
-            vertices = mass.fixtures[0].shape.vertices
-            half_width = abs(vertices[0][0] - vertices[1][0]) / 2
-            if len(vertices) <= 2:
-                half_height = abs(vertices[0][1] - vertices[1][1]) / 2
-            else:
-                half_height = abs(vertices[0][1] - vertices[2][1]) / 2
-            x, y = mass.position.x - center_x, mass.position.y - center_y
-            l_x, l_y, r_x, r_y = (x - half_width) * self.mult + w / 2, (y - half_height) * self.mult + h / 2, \
-                                 (x + half_width) * self.mult + w / 2, (y + half_height) * self.mult + h / 2
-            l_y, r_y = self.screen.shape[1] - l_y, self.screen.shape[1] - r_y
-            draw.polygon([(l_x, l_y), (r_x, l_y), (r_x, r_y), (l_x, r_y)], fill="green")
         for joint in self.morphology.joints:
-            l_x, l_y, r_x, r_y = (joint.anchorA.x - center_x) * self.mult + w / 2, \
-                                 (joint.anchorA.y - center_y) * self.mult + h / 2, \
-                                 (joint.anchorB.x - center_x) * self.mult + w / 2, \
-                                 (joint.anchorB.y - center_y) * self.mult + h / 2
+            l_x, l_y, r_x, r_y = (joint.anchorA.x - center_x) * self.magnify + w / 2, \
+                                 (joint.anchorA.y - center_y) * self.magnify + h / 2, \
+                                 (joint.anchorB.x - center_x) * self.magnify + w / 2, \
+                                 (joint.anchorB.y - center_y) * self.magnify + h / 2
             draw.line([l_x, self.screen.shape[1] - l_y, r_x, self.screen.shape[1] - r_y], fill="white")
         image.save(file_name)
         self.screen.fill(0)

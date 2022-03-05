@@ -28,8 +28,7 @@ class PressureSoftBody(BaseSoftBody):
         self.n = self.mass * self.mol
         self.T = config["T"]
         self.nRT = self.n * self.R * self.T
-        fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
-                               density=2500, friction=10.0)
+        fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)), density=2500, friction=10.0)
         self.masses = []
         self.joints = []
         self._add_masses(fixture)
