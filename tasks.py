@@ -13,6 +13,9 @@ class BaseEnv(abc.ABC):
         self.world = world
         self.bodies = []
 
+    def should_step(self, morphology):
+        return True
+
     @abc.abstractmethod
     def init_env(self):
         pass
@@ -177,7 +180,10 @@ class Escape(BaseEnv):
 
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
-        self.side = config["r"] * 2.25
+        self.side = config["r"] * 3
+
+    def should_step(self, morphology):
+        return any([abs(mass.position.x) <= self.side / 2 + 1 for mass in morphology.masses])
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -275,34 +281,34 @@ class CaveCrawler(BaseEnv):
         self.bodies.append(roof1)
         start += large_step
         roof2 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r * 2)])
         )
         self.bodies.append(roof2)
         roof3 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start + small_step, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start + small_step, self.r * 2)])
         )
         self.bodies.append(roof3)
         start += small_step
         roof4 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start, self.r)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start, self.r * 1.25)])
         )
         self.bodies.append(roof4)
         roof5 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r), (start + large_step / 2, self.r)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 1.25), (start + large_step / 2, self.r * 1.25)])
         )
         self.bodies.append(roof5)
         start += large_step / 2
         roof6 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r), (start, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 1.25), (start, self.r * 2)])
         )
         self.bodies.append(roof6)
         roof7 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start + small_step, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start + small_step, self.r * 2)])
         )
         self.bodies.append(roof7)
         start += small_step
         roof8 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start, self.r * 2.5)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start, self.r * 2.5)])
         )
         self.bodies.append(roof8)
         roof9 = self.world.CreateBody(
@@ -311,34 +317,34 @@ class CaveCrawler(BaseEnv):
         self.bodies.append(roof9)
         start += small_step
         roof10 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r * 2)])
         )
         self.bodies.append(roof10)
         roof11 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start + small_step, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start + small_step, self.r * 2)])
         )
         self.bodies.append(roof11)
         start += small_step
         roof12 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start, self.r)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start, self.r * 1.25)])
         )
         self.bodies.append(roof12)
         roof13 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r), (start + large_step / 2, self.r)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 1.25), (start + large_step / 2, self.r * 1.25)])
         )
         self.bodies.append(roof13)
         start += large_step / 2
         roof14 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r), (start, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 1.25), (start, self.r * 2)])
         )
         self.bodies.append(roof14)
         roof15 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start + small_step, self.r * 1.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start + small_step, self.r * 2)])
         )
         start += small_step
         self.bodies.append(roof15)
         roof16 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 1.75), (start, self.r * 2.5)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2), (start, self.r * 2.5)])
         )
         self.bodies.append(roof16)
         roof17 = self.world.CreateBody(
@@ -347,20 +353,20 @@ class CaveCrawler(BaseEnv):
         self.bodies.append(roof17)
         start += large_step / 2
         roof18 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start, self.r * 1.25)])
         )
         self.bodies.append(roof18)
         roof19 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r), (start + small_step, self.r * 0.75)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 1.25), (start + small_step, self.r)])
         )
         self.bodies.append(roof19)
         start += small_step
         roof20 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 0.75), (start, self.r * 2.5)])
+            shapes=b2EdgeShape(vertices=[(start, self.r), (start, self.r * 2.5)])
         )
         self.bodies.append(roof20)
         roof21 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start + large_step, self.r * 2.5)])
+            shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start + large_step * 0.75, self.r * 2.5)])
         )
         self.bodies.append(roof21)
 

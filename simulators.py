@@ -95,6 +95,9 @@ class BaseSimulator(abc.ABC):
             pygame.draw.rect(self.screen, (255, 0, 0),
                              (new_vertices[3][0], new_vertices[3][1],
                               half_width * 2 * self.magnify, half_height * 2 * self.magnify), 0)
+            pygame.draw.rect(self.screen, (219, 112, 147),
+                             (new_vertices[3][0], new_vertices[3][1],
+                              half_width * 2 * self.magnify, half_height * 2 * self.magnify), 1)
         for joint in self.morphology.joints:
             l_x, l_y, r_x, r_y = (joint.anchorA.x - center_x) * self.magnify + w / 2, \
                                  (joint.anchorA.y - center_y) * self.magnify + h / 2, \
@@ -111,7 +114,7 @@ class BaseSimulator(abc.ABC):
         imageio.mimsave("movie.gif", images)
 
     def should_step(self):
-        return self.get_step_count() < self.config["timesteps"]
+        return self.get_step_count() < self.config["timesteps"] and self.env.should_step(self.morphology)
 
     def act(self, t):
         obs = self.morphology.get_obs()

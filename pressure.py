@@ -35,7 +35,7 @@ class PressureSoftBody(BaseSoftBody):
         self.sensor = Sensor(self.n_masses * 3 + 2 + 1, 0.25 * 60, self)
         self.control_pressure = control_pressure
         max_p = self.get_maximum_pressure(self.T, self.mass, self.r)
-        min_p = max_p * 0.15
+        min_p = max_p * 0.2
         self.pressure = PressureData(self._compute_pressure(), min_p, (max_p - min_p) / 2 + min_p, max_p)
 
     @staticmethod
@@ -50,7 +50,7 @@ class PressureSoftBody(BaseSoftBody):
             x = self.r * math.cos(theta) + self.start_x
             y = self.r * math.sin(theta) + self.start_y
             mass = self.world.CreateDynamicBody(position=(x, y), fixtures=fixture)
-            # mass.angle = theta
+            mass.angle = theta
             mass.fixedRotation = True
             if prev_mass is not None:
                 self._add_joint(prev_mass, mass)
