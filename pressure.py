@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from Box2D import b2FixtureDef, b2DistanceJointDef, b2Vec2, b2PolygonShape, b2CircleShape
+from Box2D import b2FixtureDef, b2DistanceJointDef, b2Vec2, b2PolygonShape
 import matplotlib.path as path
 from dataclasses import dataclass
 
@@ -28,7 +28,7 @@ class PressureSoftBody(BaseSoftBody):
         self.n = self.mass * self.mol
         self.T = config["T"]
         self.nRT = self.n * self.R * self.T
-        fixture = b2FixtureDef(shape=b2CircleShape(radius=math.sqrt(1 / math.pi)),  # shape=b2PolygonShape(box=(0.5, 0.5)),
+        fixture = b2FixtureDef(shape=b2PolygonShape(box=(0.5, 0.5)),
                                density=2500, friction=10.0)
         self.masses = []
         self.joints = []

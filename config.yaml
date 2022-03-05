@@ -1,7 +1,7 @@
-n_masses: 10
-r: 5
-mass: 50
-size: small
+n_masses: 15
+r: 7.5
+mass: 75
+size: medium
 T: 288.20
 body: pressure
 brain: mlp
@@ -10,7 +10,7 @@ task: hilly-2-10
 timesteps: 1800
 mode: best
 evaluations: 10000
-seed: 0
+seed: 2
 np: 8
 control_pressure: 1
 save_video: 0
