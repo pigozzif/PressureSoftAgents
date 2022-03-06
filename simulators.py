@@ -27,12 +27,11 @@ class BaseSimulator(abc.ABC):
                 shutil.rmtree(self.save_dir)
             os.mkdir(self.save_dir)
             pygame.init()
-            self.screen = pygame.Surface((500, 500))
+            self.screen = pygame.Surface((750, 750))
             self.screen.fill((0, 0, 0))
         else:
             self.save_dir = None
-        self.frame_rate = 3
-        self.magnify = 12
+        self.magnify = 15
 
     def init_objects(self, solution):
         self.env = BaseEnv.create_env(self.config, self.get_world())
@@ -51,7 +50,7 @@ class BaseSimulator(abc.ABC):
 
     def step(self):
         self.inner_step()
-        if self.save_dir is not None and self.get_step_count() % self.frame_rate == 0:
+        if self.save_dir is not None:
             self._draw_image(os.path.join(self.save_dir, ".".join([str(self.get_step_count()), "png"])))
 
     @abc.abstractmethod
@@ -63,6 +62,7 @@ class BaseSimulator(abc.ABC):
         world.contactListener = None
         world.destructionListener = None
         world.renderer = None
+        obs = self.morphology.get_obs()
         for body in world.bodies:
             for fixture in body.fixtures:
                 body.DestroyFixture(fixture)
@@ -70,7 +70,7 @@ class BaseSimulator(abc.ABC):
         if self.save_dir is not None:
             self._save_video()
             shutil.rmtree(self.save_dir)
-        return self.morphology.get_obs()
+        return obs
 
     def _draw_image(self, file_name):
         w, h = self.screen.get_width(), self.screen.get_height()
@@ -81,7 +81,7 @@ class BaseSimulator(abc.ABC):
                                  (vertices[0][1] - center_y) * self.magnify + h / 2, \
                                  (vertices[1][0] - center_x) * self.magnify + w / 2, \
                                  (vertices[1][1] - center_y) * self.magnify + h / 2
-            pygame.draw.lines(self.screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 1)
+            pygame.draw.lines(self.screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
         for mass in self.morphology.masses:
             shape = mass.fixtures[0].shape
             half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
@@ -97,21 +97,18 @@ class BaseSimulator(abc.ABC):
                               half_width * 2 * self.magnify, half_height * 2 * self.magnify), 0)
             pygame.draw.rect(self.screen, (219, 112, 147),
                              (new_vertices[3][0], new_vertices[3][1],
-                              half_width * 2 * self.magnify, half_height * 2 * self.magnify), 1)
+                              half_width * 2 * self.magnify, half_height * 2 * self.magnify), 2)
         for joint in self.morphology.joints:
             l_x, l_y, r_x, r_y = (joint.anchorA.x - center_x) * self.magnify + w / 2, \
                                  (joint.anchorA.y - center_y) * self.magnify + h / 2, \
                                  (joint.anchorB.x - center_x) * self.magnify + w / 2, \
                                  (joint.anchorB.y - center_y) * self.magnify + h / 2
-            pygame.draw.lines(self.screen, (255, 255, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 1)
+            pygame.draw.lines(self.screen, (255, 255, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 3)
         pygame.image.save(self.screen, file_name)
         self.screen.fill((0, 0, 0))
 
     def _save_video(self):
-        import imageio
-        images = [imageio.imread(os.path.join(self.save_dir, img)) for img in
-                  sorted(os.listdir(self.save_dir), key=lambda x: int(x.split(".")[0]))]
-        imageio.mimsave("movie.gif", images)
+        os.system("ffmpeg -r 60 -i ./frames/%d.png -vcodec mpeg4 -vf format=yuv420p -y escape1.mp4")
 
     def should_step(self):
         return self.get_step_count() < self.config["timesteps"] and self.env.should_step(self.morphology)
@@ -146,9 +143,6 @@ class RenderSimulator(Framework, BaseSimulator):
         pygame.display.flip()
         self.clock.tick(self.settings.hz)
         self.fps = self.clock.get_fps()
-
-    def _scroll(self):
-        self.viewCenter += self.morphology.get_center_of_mass() - self.viewCenter
 
     def Step(self, settings):
         settings.drawMenu = False
