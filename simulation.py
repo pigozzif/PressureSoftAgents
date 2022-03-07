@@ -1,4 +1,5 @@
 import logging
+import math
 import time
 from multiprocessing import Pool
 
@@ -60,8 +61,8 @@ def inflate_simulation(config, listener, render):
     framework.morphology.pressure.current = 0
     while framework.should_step():
         framework.step()
-        # area = framework.morphology.get_area()
-        # if framework.get_step_count() > 360:
-        #     listener.listen(**{"t": framework.get_step_count(), "p": framework.morphology.pressure.current,
-        #                     "a": area, "r": area / (config["r"] ** 2 * math.pi)})
+        area = framework.morphology.get_area()
+        if framework.get_step_count() > 360:
+            listener.listen(**{"t": framework.get_step_count(), "p": framework.morphology.pressure.current,
+                               "a": area, "r": area / (config["r"] ** 2 * math.pi)})
     framework.reset()

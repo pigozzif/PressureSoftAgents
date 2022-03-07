@@ -30,17 +30,18 @@ class BaseEnv(abc.ABC):
 
     @classmethod
     def create_env(cls, config, world):
-        if config["task"] == "obstacles":
+        name = config["task"]
+        if name == "obstacles":
             env = Obstacles(world)
-        elif config["task"] == "flat":
+        elif name == "flat":
             env = FlatLocomotion(world, config)
-        elif config["task"].startswith("hilly"):
+        elif name.startswith("hilly"):
             env = HillyLocomotion(world, config)
-        elif config["task"] == "escape":
+        elif name == "escape":
             env = Escape(world, config)
-        elif config["task"] == "climber":
+        elif name == "climber":
             env = Climber(world, config)
-        elif config["task"] == "cave":
+        elif name == "cave":
             env = CaveCrawler(world, config)
         else:
             raise ValueError("Invalid task name: {}".format(config["task"]))
@@ -99,21 +100,17 @@ class FlatLocomotion(BaseEnv):
         self.r = config["r"]
 
     def init_env(self):
-        ground = self.world.CreateStaticBody(
-            position=(492.5, 0),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=10.0,
-                                  shape=b2PolygonShape(box=(500, 10))),
+        ground = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-500, 0), (500, 0)]),
         )
-        ground.angle = 1 * math.pi / 180
         self.bodies.append(ground)
-        wall = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
-        )
-        self.bodies.append(wall)
+        # wall = self.world.CreateBody(
+        #     shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
+        # )
+        # self.bodies.append(wall)
 
     def get_initial_pos(self):
-        return self.r, self.r
+        return self.r, self.r + 1
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)

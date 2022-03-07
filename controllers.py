@@ -56,7 +56,7 @@ class BaseController(abc.ABC):
                                            PressureSoftBody.get_maximum_pressure(config["T"],
                                                                                  config["mass"], config["r"]) / 100)
         elif brain == "mlp":
-            controller = MLPController(input_dim, output_dim)
+            controller = MLPController(input_dim, output_dim, config["control_pressure"])
         else:
             raise ValueError("Invalid controller name: {}".format(brain))
         controller.set_params(solution)
@@ -130,14 +130,17 @@ class InflateController(BaseController):
 
 class MLPController(BaseController):
 
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, control_pressure):
         BaseController.__init__(self, input_dim, output_dim)
-        self.joint_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
-                                            torch.nn.Tanh()
-                                            )
-        self.pressure_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=1),
-                                               torch.nn.Identity()
-                                               )
+        self.joint_nn = torch.nn.Sequential(
+            torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
+            torch.nn.Tanh()
+            )
+        if control_pressure:
+            self.pressure_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=1),
+                                                   torch.nn.Identity()
+                                                   )
+        self.control_pressure = control_pressure
 
     def __str__(self):
         return super(MLPController, self).__str__().replace("Base", "MLP")
@@ -146,6 +149,8 @@ class MLPController(BaseController):
         params = np.empty(0)
         for _, p in self.joint_nn.parameters():
             params = np.append(params, p.detach().numpy())
+        if not self.control_pressure:
+            return params
         for _, p in self.pressure_nn.parameters():
             params = np.append(params, p.detach().numpy())
         return params
@@ -158,6 +163,8 @@ class MLPController(BaseController):
             state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
             start += num
         self.joint_nn.load_state_dict(state_dict)
+        if not self.control_pressure:
+            return
         state_dict = self.pressure_nn.state_dict()
         for key, coeffs in state_dict.items():
             num = coeffs.numel()
@@ -167,6 +174,8 @@ class MLPController(BaseController):
 
     def control(self, t, obs):
         obs = torch.from_numpy(obs).float()
+        if not self.control_pressure:
+            return self.joint_nn(obs).detach().numpy()
         return np.concatenate([self.joint_nn(obs).detach().numpy(), self.pressure_nn(obs).detach().numpy()])
 
     def get_number_of_params(self):
