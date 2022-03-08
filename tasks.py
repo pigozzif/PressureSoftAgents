@@ -93,6 +93,9 @@ class Obstacles(BaseEnv):
     def get_initial_pos(self):
         return 0, 100
 
+    def get_reward(self, morphology, t):
+        return np.nan
+
     def get_fitness(self, morphology, t):
         return np.nan
 
@@ -102,6 +105,7 @@ class FlatLocomotion(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -111,6 +115,12 @@ class FlatLocomotion(BaseEnv):
 
     def get_initial_pos(self):
         return self.r, self.r + 1
+
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
@@ -185,6 +195,7 @@ class Escape(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.side = config["r"] * 3
+        self.prev_pos = self.get_initial_pos()[0]
 
     def should_step(self, morphology):
         return any([abs(mass.position.x) <= self.side / 2 + 1 for mass in morphology.masses])
@@ -232,6 +243,12 @@ class Escape(BaseEnv):
     def get_initial_pos(self):
         return 0, self.side / 2
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = abs(pos - self.prev_pos)
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]
 
@@ -241,6 +258,7 @@ class Climber(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[1]
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -261,8 +279,14 @@ class Climber(BaseEnv):
     def get_initial_pos(self):
         return 0, self.r + 1
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[1]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
-        return abs(morphology.get_center_of_mass()[1]) - self.get_initial_pos()[1]
+        return morphology.get_center_of_mass()[1] - self.get_initial_pos()[1]
 
 
 class CaveCrawler(BaseEnv):
@@ -270,6 +294,7 @@ class CaveCrawler(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         wall1 = self.world.CreateBody(
@@ -405,6 +430,12 @@ class CaveCrawler(BaseEnv):
 
     def get_initial_pos(self):
         return 0, self.r + 1
+
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
