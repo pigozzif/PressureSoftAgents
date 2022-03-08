@@ -5,7 +5,7 @@ import yaml
 
 from controllers import BaseController
 from listener import FileListener
-from simulation import simulation, parallel_solve, inflate_simulation
+from environment import simulation, parallel_solve, inflate_simulation
 from utils import set_seed, create_solver, random_solution
 
 

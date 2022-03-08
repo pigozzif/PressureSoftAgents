@@ -25,6 +25,10 @@ class BaseEnv(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def get_reward(self, morphology, t):
+        pass
+
+    @abc.abstractmethod
     def get_fitness(self, morphology, t):
         pass
 
@@ -104,10 +108,6 @@ class FlatLocomotion(BaseEnv):
             shapes=b2EdgeShape(vertices=[(-500, 0), (500, 0)]),
         )
         self.bodies.append(ground)
-        # wall = self.world.CreateBody(
-        #     shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
-        # )
-        # self.bodies.append(wall)
 
     def get_initial_pos(self):
         return self.r, self.r + 1
@@ -124,6 +124,7 @@ class HillyLocomotion(BaseEnv):
         self.w = int(config["task"].split("-")[2])
         self.r = config["r"]
         self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -168,6 +169,12 @@ class HillyLocomotion(BaseEnv):
 
     def get_initial_pos(self):
         return 0, self.r * 1.5
+
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
 
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
