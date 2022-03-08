@@ -41,6 +41,7 @@ class PygameRenderer(BaseRenderer):
         self.magnify = size / 50
 
     def draw_image(self, env, file_name=None):
+        self.screen.fill((0, 0, 0))
         w, h = self.screen.get_size()
         center_x, center_y = env.morphology.get_center_of_mass()
         for body in env.env.bodies:
@@ -74,7 +75,6 @@ class PygameRenderer(BaseRenderer):
             pygame.draw.lines(self.screen, (255, 255, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 3)
         if file_name is not None:
             pygame.image.save(self.screen, file_name)
-        self.screen.fill((0, 0, 0))
 
     def render(self):
         pygame.display.flip()
