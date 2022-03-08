@@ -9,6 +9,12 @@ class FileListener(object):
         self.file_name = file_name
         self.size = size
         self.header = header
+        log_dir = "/".join(self.get_log_file_name(file_name, size).split("/")[:-1])
+        if not os.path.isdir(log_dir):
+            os.makedirs(log_dir)
+        bests_dir = "/".join(self.get_best_file_name(file_name, size).split("/")[:-1])
+        if not os.path.isdir(bests_dir):
+            os.makedirs(bests_dir)
         with open(self.get_log_file_name(file_name, size), "w") as file:
             file.write(";".join(header) + "\n")
 

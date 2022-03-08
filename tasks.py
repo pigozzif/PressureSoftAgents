@@ -1,10 +1,8 @@
 import abc
-import math
 import os
 import random
 
-import numpy as np
-from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape
+from Box2D import b2EdgeShape
 
 
 class BaseEnv(abc.ABC):
@@ -35,9 +33,7 @@ class BaseEnv(abc.ABC):
     @classmethod
     def create_env(cls, config, world):
         name = config["task"]
-        if name == "obstacles":
-            env = Obstacles(world)
-        elif name == "flat":
+        if name == "flat":
             env = FlatLocomotion(world, config)
         elif name.startswith("hilly"):
             env = HillyLocomotion(world, config)
@@ -51,53 +47,6 @@ class BaseEnv(abc.ABC):
             raise ValueError("Invalid task name: {}".format(config["task"]))
         env.init_env()
         return env
-
-
-class Obstacles(BaseEnv):
-
-    def init_env(self):
-        ground = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
-        )
-        self.bodies.append(ground)
-        box1 = self.world.CreateStaticBody(
-            position=(0, 75),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(25.0, 2.5)),
-                                  ))
-        box1.fixedRotation = True
-        box1.angle = -25 * math.pi / 180.0
-        self.bodies.append(box1)
-        box2 = self.world.CreateStaticBody(
-            position=(55, 55),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(20.0, 2.5)),
-                                  ))
-        box2.fixedRotation = True
-        box2.angle = 45 * math.pi / 180.0
-        self.bodies.append(box2)
-        box3 = self.world.CreateStaticBody(
-            position=(0, 0),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(vertices=[(-50, 0.0),
-                                                                 (0, 0.0),
-                                                                 (-45, 20),
-                                                                 ]
-                                                       )))
-        box3.fixedRotation = True
-        self.bodies.append(box3)
-
-    def get_initial_pos(self):
-        return 0, 100
-
-    def get_reward(self, morphology, t):
-        return np.nan
-
-    def get_fitness(self, morphology, t):
-        return np.nan
 
 
 class FlatLocomotion(BaseEnv):
