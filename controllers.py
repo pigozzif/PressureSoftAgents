@@ -5,7 +5,7 @@ import random
 import numpy as np
 import torch
 
-from pressure import PressureSoftBody
+from soft_body import PressureSoftBody
 
 
 class BaseController(abc.ABC):

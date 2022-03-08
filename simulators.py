@@ -10,8 +10,8 @@ from Box2D.examples.framework import Framework
 from Box2D.examples.framework import FrameworkBase
 
 from controllers import BaseController
+from soft_body import BaseSoftBody
 from tasks import BaseEnv
-from utils import create_soft_body
 
 
 class BaseSimulator(abc.ABC):
@@ -35,7 +35,7 @@ class BaseSimulator(abc.ABC):
 
     def init_objects(self, solution):
         self.env = BaseEnv.create_env(self.config, self.get_world())
-        self.morphology = create_soft_body(self.config, self.env.get_initial_pos(), self.get_world())
+        self.morphology = BaseSoftBody.create_soft_body(self.config, self.env.get_initial_pos(), self.get_world())
         self.controller = BaseController.create_controller(self.config, self.morphology.get_input_dim(),
                                                            self.morphology.get_output_dim(), self.config["brain"],
                                                            solution)
