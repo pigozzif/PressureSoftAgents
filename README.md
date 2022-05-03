@@ -56,4 +56,12 @@ where {...} denotes a finite and discrete set of possible choices for the corres
 * save_video: if 1, saves simulation to `video.mp4`.
 
 ## Bibliography
-TODO, if accepted
+Please cite as:
+```
+@article{pigozzi2022shape,
+  title = {Shape Change and Control of Pressure-based Soft Agents},
+  author = {Pigozzi, Federico},
+  journal={arXiv preprint arXiv:2205.00467},
+  year = {2022}
+}
+```
