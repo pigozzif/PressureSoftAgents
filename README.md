@@ -1,5 +1,5 @@
 # Pressure-based Soft Agents
-This is the official repository for the ALife'22 (Artificial Life conference, 2022) paper "Shape Change and Control of Pressure-based Soft Agents", hosting all the code for replication. This work was carried out at the Evolutionary Robotics and Artificial Life lab (ERRALab) at University of Trieste, Italy.
+This is the official repository for the ALife'22 (Artificial Life conference, 2022) paper "Shape Change and Control of Pressure-based Soft Agents", hosting all the code for replication. This work was carried out at the Evolutionary Robotics and Artificial Life Lab (ERALLab) at University of Trieste, Italy.
 
 ## Installation
 Clone the repo:
