@@ -37,7 +37,6 @@ you will launch an evolutionary optimization for the controller (an artificial n
 At the same time, evolution metadata will be saved inside the `output` folder.
 
 ## Usage
-## Usage
 Inside `config.yaml` you may edit the following parameters:
 Argument         | Type                                | Default
 -----------------|-------------------------------------|-------------------------
