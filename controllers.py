@@ -134,7 +134,7 @@ class MLPController(BaseController):
         BaseController.__init__(self, input_dim, output_dim)
         self.joint_nn = torch.nn.Sequential(
             torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
-            torch.nn.Tanh()
+            torch.nn.Identity()
             )
         if control_pressure:
             self.pressure_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=1),

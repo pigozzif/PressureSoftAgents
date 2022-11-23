@@ -1,6 +1,5 @@
 import abc
 import math
-import random
 
 import numpy as np
 from Box2D import b2DistanceJointDef, b2FixtureDef, b2CircleShape, b2Vec2, b2PolygonShape
@@ -158,7 +157,7 @@ class PressureSoftBody(BaseSoftBody):
             anchorA=prev_mass.position,
             anchorB=mass.position,
             dampingRatio=0.3,
-            frequencyHz=10000,
+            frequencyHz=-1,
             collideConnected=False,
             userData=SpringData(distance, distance * 0.75, distance * 1.25)
         )
@@ -228,11 +227,7 @@ class PressureSoftBody(BaseSoftBody):
         if self.control_pressure:
             self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
-            data = joint.userData
-            if force >= 0:
-                joint.length = data.rest_length - (data.rest_length - data.min) * force
-            else:
-                joint.length = data.rest_length + (data.max - data.rest_length) * (- force)
+            joint.frequency = force
 
     def get_output_dim(self):
         return len(self.joints) + (1 if self.control_pressure else 0)
