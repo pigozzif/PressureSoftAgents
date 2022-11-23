@@ -200,8 +200,6 @@ class PressureSoftBody(BaseSoftBody):
             prev_mass = self.masses[i - 1 if i != 0 else len(self.masses) - 1]
             next_mass = self.masses[i + 1 if i != len(self.masses) - 1 else 0]
             midpoint = np.array([*self._get_midpoint(prev_mass, next_mass)])
-            # if np.linalg.norm(center_of_mass - prev_mass.position) > np.linalg.norm(center_of_mass - mass.position) and \
-            #         np.linalg.norm(center_of_mass - next_mass.position) > np.linalg.norm(center_of_mass - mass.position):
             if np.linalg.norm([center_of_mass - midpoint]) > np.linalg.norm([center_of_mass - mass.position]):
                 self.mass_marker[mass] = math.e ** (self.r / np.linalg.norm([mass.position - center_of_mass]))
         for joint in self.joints:
@@ -227,7 +225,7 @@ class PressureSoftBody(BaseSoftBody):
         if self.control_pressure:
             self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
-            joint.frequency = force
+            joint.frequency = int(force)
 
     def get_output_dim(self):
         return len(self.joints) + (1 if self.control_pressure else 0)

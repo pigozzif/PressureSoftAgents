@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import numpy as np
 import yaml
@@ -17,6 +18,7 @@ def parse_config():
 
 if __name__ == "__main__":
     config = parse_config()
+    config["seed"] = int(sys.argv[1])
     set_seed(config["seed"])
     config["n_params"] = BaseController.get_number_of_params_for_controller(config)
     file_name = ".".join([config["solver"], str(config["seed"]), config["task"].split("-")[0], config["brain"]])
