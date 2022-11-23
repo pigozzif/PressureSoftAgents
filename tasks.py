@@ -82,6 +82,8 @@ class HillyLocomotion(BaseEnv):
         self.h = int(config["task"].split("-")[1])
         self.w = int(config["task"].split("-")[2])
         self.r = config["r"]
+        if not os.path.isdir(os.path.join(os.getcwd(), "terrains")):
+            os.mkdir(os.path.join(os.getcwd(), "terrains"))
         self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
         self.prev_pos = self.get_initial_pos()[0]
         self.init_env()
