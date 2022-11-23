@@ -1,5 +1,6 @@
 import abc
 import math
+import random
 
 import numpy as np
 from Box2D import b2DistanceJointDef, b2FixtureDef, b2CircleShape, b2Vec2, b2PolygonShape
@@ -125,6 +126,7 @@ class PressureSoftBody(BaseSoftBody):
         max_p = self.get_maximum_pressure(self.T, self.mass, self.r)
         min_p = max_p * 0.2
         self.pressure = PressureData(self._compute_pressure(), min_p, (max_p - min_p) / 2 + min_p, max_p)
+        self.mass_marker = {}
 
     @staticmethod
     def get_maximum_pressure(T, mass, r):
@@ -156,7 +158,7 @@ class PressureSoftBody(BaseSoftBody):
             anchorA=prev_mass.position,
             anchorB=mass.position,
             dampingRatio=0.3,
-            frequencyHz=8,
+            frequencyHz=10000,
             collideConnected=False,
             userData=SpringData(distance, distance * 0.75, distance * 1.25)
         )
@@ -169,27 +171,40 @@ class PressureSoftBody(BaseSoftBody):
     def _get_normalized_normal(mass_a, mass_b, polygon):
         normal1 = b2Vec2(- mass_b.position.y + mass_a.position.y, mass_b.position.x - mass_a.position.x)
         normal1.Normalize()
-        midpoint_x, midpoint_y = (mass_a.position.x + mass_b.position.x) / 2,\
-                                 (mass_a.position.y + mass_b.position.y) / 2
+        midpoint_x, midpoint_y = PressureSoftBody._get_midpoint(mass_a, mass_b)
         point1 = np.array([midpoint_x + normal1.x, midpoint_y + normal1.y])
         normal2 = b2Vec2(mass_b.position.y - mass_a.position.y, - mass_b.position.x + mass_a.position.x)
         normal2.Normalize()
         a = (polygon.contains_point(point1, radius=0.001) or polygon.contains_point(point1, radius=-0.001))
         return normal2 if a else normal1
 
-    def get_area(self):
-        positions = [mass.position for mass in self.masses]
+    @staticmethod
+    def _get_midpoint(mass_a, mass_b):
+        return (mass_a.position.x + mass_b.position.x) / 2, (mass_a.position.y + mass_b.position.y) / 2
+
+    @staticmethod
+    def get_polygon_area(positions):
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
                              for ((x0, y0), (x1, y1)) in zip(positions, positions[1:] + [positions[0]])))
 
     def _compute_pressure(self):
-        return self.nRT / self.get_area()
+        return self.nRT / self.get_polygon_area([mass.position for mass in self.masses])
 
     def physics_step(self):
         positions = [mass.position for mass in self.masses]
         if not self.control_pressure:
             self.pressure.current = self._compute_pressure()
         polygon = path.Path(np.array(positions))
+        self.mass_marker.clear()
+        center_of_mass = self.get_center_of_mass()
+        for i, mass in enumerate(self.masses):
+            prev_mass = self.masses[i - 1 if i != 0 else len(self.masses) - 1]
+            next_mass = self.masses[i + 1 if i != len(self.masses) - 1 else 0]
+            midpoint = np.array([*self._get_midpoint(prev_mass, next_mass)])
+            # if np.linalg.norm(center_of_mass - prev_mass.position) > np.linalg.norm(center_of_mass - mass.position) and \
+            #         np.linalg.norm(center_of_mass - next_mass.position) > np.linalg.norm(center_of_mass - mass.position):
+            if np.linalg.norm([center_of_mass - midpoint]) > np.linalg.norm([center_of_mass - mass.position]):
+                self.mass_marker[mass] = math.e ** (self.r / np.linalg.norm([mass.position - center_of_mass]))
         for joint in self.joints:
             mass_a = joint.bodyA
             mass_b = joint.bodyB
@@ -197,8 +212,14 @@ class PressureSoftBody(BaseSoftBody):
             pressure = self.pressure.current * joint.length
             pressure /= 2
             pressure_force = normal * pressure
-            mass_a.ApplyForceToCenter(pressure_force, True)
-            mass_b.ApplyForceToCenter(pressure_force, True)
+            if mass_a not in self.mass_marker:
+                mass_a.ApplyForceToCenter(pressure_force, True)
+            else:
+                mass_a.ApplyForceToCenter(self.mass_marker[mass_a] * pressure_force, True)
+            if mass_b not in self.mass_marker:
+                mass_b.ApplyForceToCenter(pressure_force, True)
+            else:
+                mass_b.ApplyForceToCenter(self.mass_marker[mass_b] * pressure_force, True)
 
     def get_obs(self):
         return self.sensor.sense(self)

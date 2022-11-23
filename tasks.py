@@ -84,6 +84,7 @@ class HillyLocomotion(BaseEnv):
         self.r = config["r"]
         self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
         self.prev_pos = self.get_initial_pos()[0]
+        self.init_env()
 
     def init_env(self):
         ground = self.world.CreateBody(
