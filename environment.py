@@ -132,7 +132,7 @@ def simulation(config, solution, render):
         action = env.act(obs)
         obs, r, done, info = env.step(action)
         env.render()
-    fitness = env.env.get_fitness(env.morphology, env.stepCount)
+    fitness = env.env.get_fitness(env.morphology, config["timesteps"])
     env.reset()
     return fitness
 

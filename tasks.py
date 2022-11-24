@@ -456,6 +456,9 @@ class Carrier(BaseEnv):
         self.r = config["r"]
         self.prev_pos = self.get_initial_pos()[0]
 
+    def should_step(self, morphology):
+        return all([contact.other != self.bodies[0] for contact in self.bodies[1].contacts])
+
     def init_env(self):
         ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-500, 0), (500, 0)]),
@@ -463,7 +466,7 @@ class Carrier(BaseEnv):
         self.bodies.append(ground)
         obj = self.world.CreateDynamicBody(position=(self.r, self.r * 2.5 + 1),
                                            fixtures=b2FixtureDef(shape=b2PolygonShape(box=(self.r / 3, self.r / 3)),
-                                                                 density=1250, friction=10.0))
+                                                                 density=1000, friction=10.0))
         self.bodies.append(obj)
 
     def get_initial_pos(self):
