@@ -201,7 +201,7 @@ class PressureSoftBody(BaseSoftBody):
             next_mass = self.masses[i + 1 if i != len(self.masses) - 1 else 0]
             midpoint = np.array([*self._get_midpoint(prev_mass, next_mass)])
             if np.linalg.norm([center_of_mass - midpoint]) > np.linalg.norm([center_of_mass - mass.position]):
-                self.mass_marker[mass] = math.e ** (self.r / np.linalg.norm([mass.position - center_of_mass]))
+                self.mass_marker[mass] = float((self.r / np.linalg.norm([mass.position - center_of_mass])))
         for joint in self.joints:
             mass_a = joint.bodyA
             mass_b = joint.bodyB
@@ -212,11 +212,13 @@ class PressureSoftBody(BaseSoftBody):
             if mass_a not in self.mass_marker:
                 mass_a.ApplyForceToCenter(pressure_force, True)
             else:
-                mass_a.ApplyForceToCenter(self.mass_marker[mass_a] * pressure_force, True)
+                new_pressure_force = self.mass_marker[mass_a] * pressure_force
+                mass_a.ApplyForceToCenter(b2Vec2(new_pressure_force[0], new_pressure_force[1]), True)
             if mass_b not in self.mass_marker:
                 mass_b.ApplyForceToCenter(pressure_force, True)
             else:
-                mass_b.ApplyForceToCenter(self.mass_marker[mass_b] * pressure_force, True)
+                new_pressure_force = self.mass_marker[mass_b] * pressure_force
+                mass_b.ApplyForceToCenter(b2Vec2(new_pressure_force[0], new_pressure_force[1]), True)
 
     def get_obs(self):
         return self.sensor.sense(self)
@@ -225,6 +227,8 @@ class PressureSoftBody(BaseSoftBody):
         if self.control_pressure:
             self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
+            if math.isnan(force):
+                force = 1.0
             joint.frequency = int(force)
 
     def get_output_dim(self):
