@@ -7,13 +7,6 @@ from dataclasses import dataclass
 from matplotlib import path
 
 
-@dataclass
-class SpringData(object):
-    rest_length: float
-    min: float
-    max: float
-
-
 class Sensor(object):
 
     def __init__(self, dim, window_size, morphology):
@@ -97,6 +90,11 @@ class BaseSoftBody(abc.ABC):
 
 
 @dataclass
+class SpringData(object):
+    min: float
+    max: float
+
+@dataclass
 class PressureData(object):
     current: float
     min: float
@@ -149,17 +147,15 @@ class PressureSoftBody(BaseSoftBody):
         self._add_joint(prev_mass, self.masses[0])
 
     def _add_joint(self, mass, prev_mass):
-        distance = math.sqrt((prev_mass.position[0] - mass.position[0]) ** 2 +
-                             (prev_mass.position[1] - mass.position[1]) ** 2)
         dfn = b2DistanceJointDef(
             bodyA=prev_mass,
             bodyB=mass,
             anchorA=prev_mass.position,
             anchorB=mass.position,
             dampingRatio=0.3,
-            frequencyHz=-1,
+            frequencyHz=8,
             collideConnected=False,
-            userData=SpringData(distance, distance * 0.75, distance * 1.25)
+            userData=SpringData(-10, 10)
         )
         self.joints.append(self.world.CreateJoint(dfn))
 
@@ -227,9 +223,7 @@ class PressureSoftBody(BaseSoftBody):
         if self.control_pressure:
             self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
-            if math.isnan(force):
-                force = 1.0
-            joint.frequency = int(force)
+            joint.frequency = min(max(int(joint.frequency + force), joint.userData.min), joint.userData.max)
 
     def get_output_dim(self):
         return len(self.joints) + (1 if self.control_pressure else 0)

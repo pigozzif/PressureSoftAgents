@@ -71,7 +71,7 @@ class Environment(abc.ABC, FrameworkBase, gym.Env):
                 body.DestroyFixture(fixture)
             self.world.DestroyBody(body)
         if self.save_dir is not None:
-            self._save_video()
+            self._save_video(".".join([self.config["task"].split("-")[0], str(self.config["seed"]), "mp4"]))
             shutil.rmtree(self.save_dir)
         return obs
 
@@ -83,8 +83,8 @@ class Environment(abc.ABC, FrameworkBase, gym.Env):
             self._renderer.render()
 
     @staticmethod
-    def _save_video():
-        os.system("ffmpeg -r 60 -i ./frames/%d.png -vcodec mpeg4 -vf format=yuv420p -y video.mp4")
+    def _save_video(video_name):
+        os.system("ffmpeg -r 60 -i ./frames/%d.png -vcodec mpeg4 -vf format=yuv420p -y {}".format(video_name))
 
     def should_step(self):
         return self.stepCount < self.config["timesteps"] and self.env.should_step(self.morphology)
