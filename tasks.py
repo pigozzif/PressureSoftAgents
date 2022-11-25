@@ -300,7 +300,7 @@ class CaveCrawler(BaseEnv):
         )
         self.bodies.append(wall1)
         small_step = self.r
-        large_step = small_step * 4
+        large_step = small_step * 2.5
         start = - self.r * 2
         roof1 = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start + large_step, self.r * 2.5)])
