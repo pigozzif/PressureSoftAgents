@@ -466,7 +466,7 @@ class Carrier(BaseEnv):
         self.bodies.append(ground)
         obj = self.world.CreateDynamicBody(position=(self.r, self.r * 2.5 + 1),
                                            fixtures=b2FixtureDef(shape=b2PolygonShape(box=(self.r / 3, self.r / 3)),
-                                                                 density=1000, friction=0.0))
+                                                                 density=500, friction=0.0))
         obj.fixedRotation = False
         self.bodies.append(obj)
 

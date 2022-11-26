@@ -197,7 +197,7 @@ class PressureSoftBody(BaseSoftBody):
             next_mass = self.masses[i + 1 if i != len(self.masses) - 1 else 0]
             midpoint = np.array([*self._get_midpoint(prev_mass, next_mass)])
             if np.linalg.norm([center_of_mass - midpoint]) > np.linalg.norm([center_of_mass - mass.position]):
-                self.mass_marker[mass] = float((self.r / np.linalg.norm([mass.position - center_of_mass])))
+                mass.linearVelocity = - mass.linearVelocity
         for joint in self.joints:
             mass_a = joint.bodyA
             mass_b = joint.bodyB
