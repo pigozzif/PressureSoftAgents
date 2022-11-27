@@ -53,7 +53,7 @@ class BaseController(abc.ABC):
             controller = PhaseController(input_dim, output_dim)
         elif brain == "inflate":
             controller = InflateController(input_dim, output_dim,
-                                           PressureSoftBody.get_maximum_pressure(config["T"],
+                                           PressureSoftBody.get_pressure_at_rest(config["T"],
                                                                                  config["mass"], config["r"]) / 100)
         elif brain == "mlp":
             controller = MLPController(input_dim, output_dim, config["control_pressure"])

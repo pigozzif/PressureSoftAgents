@@ -3,7 +3,7 @@ import os
 import random
 
 import pygame
-from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape
+from Box2D import b2EdgeShape, b2FixtureDef, b2CircleShape
 
 
 class BaseEnv(abc.ABC):
@@ -465,8 +465,8 @@ class Carrier(BaseEnv):
         )
         self.bodies.append(ground)
         obj = self.world.CreateDynamicBody(position=(self.r, self.r * 2.5 + 1),
-                                           fixtures=b2FixtureDef(shape=b2PolygonShape(box=(self.r / 3, self.r / 3)),
-                                                                 density=500, friction=0.0))
+                                           fixtures=b2FixtureDef(shape=b2CircleShape(radius=self.r / 4),
+                                                                 density=500, friction=10.0))
         obj.fixedRotation = False
         self.bodies.append(obj)
 
@@ -492,17 +492,10 @@ class Carrier(BaseEnv):
         pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
 
         shape = self.bodies[1].fixtures[0].shape
-        half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
-        half_height = abs(shape.vertices[0][1] - shape.vertices[2][1]) / 2
         cx, cy = self.bodies[1].position.x, self.bodies[1].position.y
-        vertices = [(cx - half_width, cy - half_height), (cx + half_width, cy - half_height),
-                    (cx + half_width, cy + half_height), (cx - half_width, cy + half_height)]
-        new_vertices = [
-            ((x - center_x) * magnify + w / 2, h - ((y - center_y) * magnify + h / 2)) for
-            x, y in vertices]
-        pygame.draw.rect(screen, (255, 0, 0),
-                         (new_vertices[3][0], new_vertices[3][1],
-                          half_width * 2 * magnify, half_height * 2 * magnify), 0)
-        pygame.draw.rect(screen, (219, 112, 147),
-                         (new_vertices[3][0], new_vertices[3][1],
-                          half_width * 2 * magnify, half_height * 2 * magnify), 2)
+        pygame.draw.circle(screen, (255, 0, 0), ((cx - center_x) * magnify + w / 2,
+                                                 h - ((cy - center_y) * magnify + h / 2)),
+                           shape.radius * magnify, 0)
+        pygame.draw.circle(screen, (219, 112, 147), ((cx - center_x) * magnify + w / 2,
+                                                     h - ((cy - center_y) * magnify + h / 2)),
+                           shape.radius * magnify, 2)
