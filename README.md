@@ -15,7 +15,7 @@ hosting all the code for replication. This work was carried out at the Evolution
 ## Installation
 Clone the repo:
 ```
-git clone https://github.com/pigozzif/SoftBodies.git
+git clone https://github.com/pigozzif/PressureSoftAgents.git
 ```
 ### Requirements
 Either install Python dependencies with conda:
