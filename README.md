@@ -68,10 +68,11 @@ where {...} denotes a finite and discrete set of possible choices for the corres
 ## Bibliography
 Please cite as:
 ```
-@article{pigozzi2022shape,
-  title = {Shape Change and Control of Pressure-based Soft Agents},
-  author = {Pigozzi, Federico},
-  journal={arXiv preprint arXiv:2205.00467},
-  year = {2022}
+@proceedings{pigozzi2022shape
+    author = {Pigozzi, Federico},
+    title = "{Shape Change and Control of Pressure-based Soft Agents}",
+    volume = {ALIFE 2022: The 2022 Conference on Artificial Life},
+    year = {2022},
+    doi = {10.1162/isal_a_00520}
 }
 ```
