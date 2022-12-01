@@ -455,9 +455,12 @@ class Carrier(BaseEnv):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
         self.prev_pos = self.get_initial_pos()[0]
+        self.start_pos = None
 
     def should_step(self, morphology):
-        return all([contact.other != self.bodies[0] for contact in self.bodies[1].contacts])
+        return any([mass.position.x >= self.bodies[1].position.x for mass in morphology.masses]) and \
+               any([mass.position.x < self.bodies[1].position.x for mass in morphology.masses]) and \
+               all([contact.other != self.bodies[0] for contact in self.bodies[1].contacts])
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -469,6 +472,7 @@ class Carrier(BaseEnv):
                                                                  density=500, friction=10.0))
         obj.fixedRotation = False
         self.bodies.append(obj)
+        self.start_pos = obj.position.y
 
     def get_initial_pos(self):
         return self.r, self.r + 1
@@ -480,6 +484,8 @@ class Carrier(BaseEnv):
         return r
 
     def get_fitness(self, morphology, t):
+        if all([self.bodies[0] not in mass.contacts for mass in morphology.masses]):
+            return 0.0
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
     def draw_env(self, w, h, center, screen, magnify):
