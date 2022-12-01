@@ -44,13 +44,7 @@ class PygameRenderer(BaseRenderer):
         self.screen.fill((0, 0, 0))
         w, h = self.screen.get_size()
         center_x, center_y = env.morphology.get_center_of_mass()
-        for body in env.env.bodies:
-            vertices = body.fixtures[0].shape.vertices
-            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * self.magnify + w / 2, \
-                                 (vertices[0][1] - center_y) * self.magnify + h / 2, \
-                                 (vertices[1][0] - center_x) * self.magnify + w / 2, \
-                                 (vertices[1][1] - center_y) * self.magnify + h / 2
-            pygame.draw.lines(self.screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
+        env.env.draw_env(w, h, (center_x, center_y), self.screen, self.magnify)
         for mass in env.morphology.masses:
             shape = mass.fixtures[0].shape
             half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
