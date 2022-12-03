@@ -46,7 +46,7 @@ def simulation(config, solution, render):
         framework = NoRenderSimulator(config, solution, save_video=int(config["save_video"]))
     while framework.should_step():
         framework.step()
-    fitness = framework.env.get_fitness(framework.morphology, framework.get_step_count())
+    fitness = framework.env.get_fitness(framework.morphology, config["timesteps"])
     framework.reset()
     return fitness
 

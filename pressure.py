@@ -20,7 +20,7 @@ class PressureSoftBody(BaseSoftBody):
     mol = 28.0134
     R = 8.31446261815324
 
-    def __init__(self, config, world, start_x, start_y, control_pressure=False):
+    def __init__(self, config, world, start_x, start_y):
         super(PressureSoftBody, self).__init__(world, start_x, start_y)
         self.n_masses = config["n_masses"]
         self.r = config["r"]
@@ -33,7 +33,8 @@ class PressureSoftBody(BaseSoftBody):
         self.joints = []
         self._add_masses(fixture)
         self.sensor = Sensor(self.n_masses * 3 + 2 + 1, 0.25 * 60, self)
-        self.control_pressure = control_pressure
+        self.control_pressure = config["control_pressure"]
+        self.control_joints = config["control_joints"]
         max_p = self.get_maximum_pressure(self.T, self.mass, self.r)
         min_p = max_p * 0.2
         self.pressure = PressureData(self._compute_pressure(), min_p, (max_p - min_p) / 2 + min_p, max_p)
@@ -118,6 +119,8 @@ class PressureSoftBody(BaseSoftBody):
     def apply_control(self, control):
         if self.control_pressure:
             self.pressure.current = min(max(self.pressure.current + control[-1], self.pressure.min), self.pressure.max)
+        if not self.control_joints:
+            return
         for force, joint in zip(control[:-1 if self.control_pressure else 0], self.joints):
             data = joint.userData
             if force >= 0:

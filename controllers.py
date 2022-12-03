@@ -56,7 +56,7 @@ class BaseController(abc.ABC):
                                            PressureSoftBody.get_maximum_pressure(config["T"],
                                                                                  config["mass"], config["r"]) / 100)
         elif brain == "mlp":
-            controller = MLPController(input_dim, output_dim, config["control_pressure"])
+            controller = MLPController(input_dim, output_dim, config["control_pressure"], config["control_joints"])
         else:
             raise ValueError("Invalid controller name: {}".format(brain))
         controller.set_params(solution)
@@ -130,12 +130,13 @@ class InflateController(BaseController):
 
 class MLPController(BaseController):
 
-    def __init__(self, input_dim, output_dim, control_pressure):
+    def __init__(self, input_dim, output_dim, control_pressure, control_joints):
         BaseController.__init__(self, input_dim, output_dim)
-        self.joint_nn = torch.nn.Sequential(
-            torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
-            torch.nn.Tanh()
-            )
+        if control_joints:
+            self.joint_nn = torch.nn.Sequential(
+                torch.nn.Linear(in_features=self.input_dim, out_features=self.output_dim - 1),
+                torch.nn.Tanh()
+                )
         if control_pressure:
             self.pressure_nn = torch.nn.Sequential(torch.nn.Linear(in_features=self.input_dim, out_features=1),
                                                    torch.nn.Identity()

@@ -1,10 +1,9 @@
 import abc
-import math
 import os
 import random
 
-import numpy as np
-from Box2D import b2EdgeShape, b2FixtureDef, b2PolygonShape
+import pygame
+from Box2D import b2EdgeShape, b2FixtureDef, b2CircleShape
 
 
 class BaseEnv(abc.ABC):
@@ -25,15 +24,21 @@ class BaseEnv(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def get_reward(self, morphology, t):
+        pass
+
+    @abc.abstractmethod
     def get_fitness(self, morphology, t):
+        pass
+
+    @abc.abstractmethod
+    def draw_env(self, w, h, center, screen, magnify):
         pass
 
     @classmethod
     def create_env(cls, config, world):
         name = config["task"]
-        if name == "obstacles":
-            env = Obstacles(world)
-        elif name == "flat":
+        if name == "flat":
             env = FlatLocomotion(world, config)
         elif name.startswith("hilly"):
             env = HillyLocomotion(world, config)
@@ -43,54 +48,12 @@ class BaseEnv(abc.ABC):
             env = Climber(world, config)
         elif name == "cave":
             env = CaveCrawler(world, config)
+        elif name == "carrier":
+            env = Carrier(world, config)
         else:
             raise ValueError("Invalid task name: {}".format(config["task"]))
         env.init_env()
         return env
-
-
-class Obstacles(BaseEnv):
-
-    def init_env(self):
-        ground = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(-100, 0), (100, 0)])
-        )
-        self.bodies.append(ground)
-        box1 = self.world.CreateStaticBody(
-            position=(0, 75),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(25.0, 2.5)),
-                                  ))
-        box1.fixedRotation = True
-        box1.angle = -25 * math.pi / 180.0
-        self.bodies.append(box1)
-        box2 = self.world.CreateStaticBody(
-            position=(55, 55),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(box=(20.0, 2.5)),
-                                  ))
-        box2.fixedRotation = True
-        box2.angle = 45 * math.pi / 180.0
-        self.bodies.append(box2)
-        box3 = self.world.CreateStaticBody(
-            position=(0, 0),
-            allowSleep=True,
-            fixtures=b2FixtureDef(friction=0.8,
-                                  shape=b2PolygonShape(vertices=[(-50, 0.0),
-                                                                 (0, 0.0),
-                                                                 (-45, 20),
-                                                                 ]
-                                                       )))
-        box3.fixedRotation = True
-        self.bodies.append(box3)
-
-    def get_initial_pos(self):
-        return 0, 100
-
-    def get_fitness(self, morphology, t):
-        return np.nan
 
 
 class FlatLocomotion(BaseEnv):
@@ -98,22 +61,35 @@ class FlatLocomotion(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         ground = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(-500, 0), (500, 0)]),
         )
         self.bodies.append(ground)
-        # wall = self.world.CreateBody(
-        #     shapes=b2EdgeShape(vertices=[(-7.5, 100), (-7.5, -100)])
-        # )
-        # self.bodies.append(wall)
 
     def get_initial_pos(self):
         return self.r, self.r + 1
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        for body in self.bodies:
+            vertices = body.fixtures[0].shape.vertices
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * magnify + h / 2
+            pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
 
 
 class HillyLocomotion(BaseEnv):
@@ -123,7 +99,10 @@ class HillyLocomotion(BaseEnv):
         self.h = int(config["task"].split("-")[1])
         self.w = int(config["task"].split("-")[2])
         self.r = config["r"]
+        if not os.path.isdir(os.path.join(os.getcwd(), "terrains")):
+            os.mkdir(os.path.join(os.getcwd(), "terrains"))
         self.file_name = os.path.join(os.getcwd(), "terrains", ".".join(["hilly", str(config["seed"]), "txt"]))
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -169,8 +148,24 @@ class HillyLocomotion(BaseEnv):
     def get_initial_pos(self):
         return 0, self.r * 1.5
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        for body in self.bodies:
+            vertices = body.fixtures[0].shape.vertices
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * magnify + h / 2
+            pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
 
 
 class Escape(BaseEnv):
@@ -178,6 +173,7 @@ class Escape(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.side = config["r"] * 3
+        self.prev_pos = self.get_initial_pos()[0]
 
     def should_step(self, morphology):
         return any([abs(mass.position.x) <= self.side / 2 + 1 for mass in morphology.masses])
@@ -225,8 +221,24 @@ class Escape(BaseEnv):
     def get_initial_pos(self):
         return 0, self.side / 2
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = abs(pos - self.prev_pos)
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
         return abs(morphology.get_center_of_mass()[0]) - self.get_initial_pos()[0]
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        for body in self.bodies:
+            vertices = body.fixtures[0].shape.vertices
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * magnify + h / 2
+            pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
 
 
 class Climber(BaseEnv):
@@ -234,6 +246,7 @@ class Climber(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[1]
 
     def init_env(self):
         ground = self.world.CreateBody(
@@ -254,8 +267,24 @@ class Climber(BaseEnv):
     def get_initial_pos(self):
         return 0, self.r + 1
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[1]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
-        return abs(morphology.get_center_of_mass()[1]) - self.get_initial_pos()[1]
+        return morphology.get_center_of_mass()[1] - self.get_initial_pos()[1]
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        for body in self.bodies:
+            vertices = body.fixtures[0].shape.vertices
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * magnify + h / 2
+            pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
 
 
 class CaveCrawler(BaseEnv):
@@ -263,14 +292,15 @@ class CaveCrawler(BaseEnv):
     def __init__(self, world, config):
         BaseEnv.__init__(self, world)
         self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[0]
 
     def init_env(self):
         wall1 = self.world.CreateBody(
-            shapes=b2EdgeShape(vertices=[(- self.r * 2,  0), (- self.r * 2, self.r * 2.5)])
+            shapes=b2EdgeShape(vertices=[(- self.r * 2, 0), (- self.r * 2, self.r * 2.5)])
         )
         self.bodies.append(wall1)
         small_step = self.r
-        large_step = small_step * 4
+        large_step = small_step * 2.5
         start = - self.r * 2
         roof1 = self.world.CreateBody(
             shapes=b2EdgeShape(vertices=[(start, self.r * 2.5), (start + large_step, self.r * 2.5)])
@@ -399,5 +429,77 @@ class CaveCrawler(BaseEnv):
     def get_initial_pos(self):
         return 0, self.r + 1
 
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
     def get_fitness(self, morphology, t):
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        for body in self.bodies:
+            vertices = body.fixtures[0].shape.vertices
+            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                                 (vertices[0][1] - center_y) * magnify + h / 2, \
+                                 (vertices[1][0] - center_x) * magnify + w / 2, \
+                                 (vertices[1][1] - center_y) * magnify + h / 2
+            pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
+
+
+class Carrier(BaseEnv):
+
+    def __init__(self, world, config):
+        BaseEnv.__init__(self, world)
+        self.r = config["r"]
+        self.prev_pos = self.get_initial_pos()[0]
+        self.start_pos = None
+
+    def should_step(self, morphology):
+        return any([mass.position.x >= self.bodies[1].position.x for mass in morphology.masses]) and \
+               any([mass.position.x < self.bodies[1].position.x for mass in morphology.masses]) and \
+               all([contact.other != self.bodies[0] for contact in self.bodies[1].contacts])
+
+    def init_env(self):
+        ground = self.world.CreateBody(
+            shapes=b2EdgeShape(vertices=[(-500, 0), (500, 0)]),
+        )
+        self.bodies.append(ground)
+        obj = self.world.CreateDynamicBody(position=(self.r, self.r * 2.5 + 1),
+                                           fixtures=b2FixtureDef(shape=b2CircleShape(radius=self.r / 4),
+                                                                 density=500, friction=10.0))
+        obj.fixedRotation = False
+        self.bodies.append(obj)
+        self.start_pos = obj.position.y
+
+    def get_initial_pos(self):
+        return self.r, self.r + 1
+
+    def get_reward(self, morphology, t):
+        pos = morphology.get_center_of_mass()[0]
+        r = pos - self.prev_pos
+        self.prev_pos = pos
+        return r
+
+    def get_fitness(self, morphology, t):
+        return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
+
+    def draw_env(self, w, h, center, screen, magnify):
+        center_x, center_y = center
+        vertices = self.bodies[0].fixtures[0].shape.vertices
+        l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * magnify + w / 2, \
+                             (vertices[0][1] - center_y) * magnify + h / 2, \
+                             (vertices[1][0] - center_x) * magnify + w / 2, \
+                             (vertices[1][1] - center_y) * magnify + h / 2
+        pygame.draw.lines(screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
+
+        shape = self.bodies[1].fixtures[0].shape
+        cx, cy = self.bodies[1].position.x, self.bodies[1].position.y
+        pygame.draw.circle(screen, (255, 0, 0), ((cx - center_x) * magnify + w / 2,
+                                                 h - ((cy - center_y) * magnify + h / 2)),
+                           shape.radius * magnify, 0)
+        pygame.draw.circle(screen, (219, 112, 147), ((cx - center_x) * magnify + w / 2,
+                                                     h - ((cy - center_y) * magnify + h / 2)),
+                           shape.radius * magnify, 2)
