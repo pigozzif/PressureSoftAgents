@@ -484,8 +484,8 @@ class Carrier(BaseEnv):
         return r
 
     def get_fitness(self, morphology, t):
-        if all([self.bodies[0] not in mass.contacts for mass in morphology.masses]):
-            return 0.0
+        # if all([self.bodies[0] not in mass.contacts for mass in morphology.masses]):
+        #     return 0.0
         return (morphology.get_center_of_mass()[0] - self.get_initial_pos()[0]) / (t / 60.0)
 
     def draw_env(self, w, h, center, screen, magnify):
