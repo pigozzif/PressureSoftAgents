@@ -142,42 +142,47 @@ class MLPController(BaseController):
                                                    torch.nn.Identity()
                                                    )
         self.control_pressure = control_pressure
+        self.control_joints = control_joints
 
     def __str__(self):
         return super(MLPController, self).__str__().replace("Base", "MLP")
 
     def get_params(self):
         params = np.empty(0)
-        for _, p in self.joint_nn.parameters():
-            params = np.append(params, p.detach().numpy())
-        if not self.control_pressure:
-            return params
-        for _, p in self.pressure_nn.parameters():
-            params = np.append(params, p.detach().numpy())
+        if self.control_joints:
+            for _, p in self.joint_nn.parameters():
+                params = np.append(params, p.detach().numpy())
+        if self.control_pressure:
+            for _, p in self.pressure_nn.parameters():
+                params = np.append(params, p.detach().numpy())
         return params
 
     def set_params(self, params):
-        state_dict = self.joint_nn.state_dict()
         start = 0
-        for key, coeffs in state_dict.items():
-            num = coeffs.numel()
-            state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
-            start += num
-        self.joint_nn.load_state_dict(state_dict)
-        if not self.control_pressure:
-            return
-        state_dict = self.pressure_nn.state_dict()
-        for key, coeffs in state_dict.items():
-            num = coeffs.numel()
-            state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
-            start += num
-        self.pressure_nn.load_state_dict(state_dict)
+        if self.control_joints:
+            state_dict = self.joint_nn.state_dict()
+            for key, coeffs in state_dict.items():
+                num = coeffs.numel()
+                state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
+                start += num
+            self.joint_nn.load_state_dict(state_dict)
+        if self.control_pressure:
+            state_dict = self.pressure_nn.state_dict()
+            for key, coeffs in state_dict.items():
+                num = coeffs.numel()
+                state_dict[key] = torch.tensor(np.array(params[start:start + num]).reshape(state_dict[key].shape))
+                start += num
+            self.pressure_nn.load_state_dict(state_dict)
 
     def control(self, t, obs):
         obs = torch.from_numpy(obs).float()
-        if not self.control_pressure:
-            return self.joint_nn(obs).detach().numpy()
-        return np.concatenate([self.joint_nn(obs).detach().numpy(), self.pressure_nn(obs).detach().numpy()])
+        params_1 = np.empty(0)
+        params_2 = np.empty(0)
+        if self.control_joints:
+            params_1 = self.joint_nn(obs).detach().numpy()
+        if self.control_pressure:
+            params_2 = self.pressure_nn(obs).detach().numpy()
+        return np.concatenate([params_1, params_2])
 
     def get_number_of_params(self):
-        raise self.input_dim * self.output_dim + self.output_dim
+        return self.input_dim * self.output_dim + self.output_dim
