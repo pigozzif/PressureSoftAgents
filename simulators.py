@@ -102,7 +102,8 @@ class BaseSimulator(abc.ABC):
         self.screen.fill((0, 0, 0))
 
     def _save_video(self):
-        os.system("ffmpeg -r 60 -i ./frames/%d.png -vcodec mpeg4 -vf format=yuv420p -y video.mp4")
+        os.system("ffmpeg -r 60 -i ./frames/%d.png -vcodec mpeg4 -vf format=yuv420p -y {}".format(
+            ".".join([self.config["task"], self.config["seed"], "mp4"])))
 
     def should_step(self):
         return self.get_step_count() < self.config["timesteps"] and self.env.should_step(self.morphology)
