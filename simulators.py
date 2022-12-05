@@ -75,13 +75,7 @@ class BaseSimulator(abc.ABC):
     def _draw_image(self, file_name):
         w, h = self.screen.get_width(), self.screen.get_height()
         center_x, center_y = self.morphology.get_center_of_mass()
-        for body in self.env.bodies:
-            vertices = body.fixtures[0].shape.vertices
-            l_x, l_y, r_x, r_y = (vertices[0][0] - center_x) * self.magnify + w / 2, \
-                                 (vertices[0][1] - center_y) * self.magnify + h / 2, \
-                                 (vertices[1][0] - center_x) * self.magnify + w / 2, \
-                                 (vertices[1][1] - center_y) * self.magnify + h / 2
-            pygame.draw.lines(self.screen, (0, 0, 255), False, [(l_x, h - l_y), (r_x, h - r_y)], 5)
+        self.env.draw_env(w, h, (center_x, center_y), self.screen, self.magnify)
         for mass in self.morphology.masses:
             shape = mass.fixtures[0].shape
             half_width = abs(shape.vertices[0][0] - shape.vertices[1][0]) / 2
