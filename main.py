@@ -27,6 +27,12 @@ if __name__ == "__main__":
     set_seed(config["seed"])
     config["n_params"] = BaseController.get_number_of_params_for_controller(config)
     file_name = ".".join([config["solver"], str(config["seed"]), config["task"].split("-")[0], config["brain"]])
+    if config["control_pressure"] == 0:
+        experiment = "ablation_no_pressure"
+    elif config["control_joints"] == 0:
+        experiment = "ablation_no_joints"
+    else:
+        experiment = "exp"
     if config["mode"] == "random":
         print("fitness: {}".format(simulation(config, random_solution(config), render=not config["save_video"])))
     elif config["mode"].startswith("opt"):
@@ -37,10 +43,10 @@ if __name__ == "__main__":
         best = parallel_solve(solver, config["evaluations"] // solver.popsize, config, listener)
         logging.warning("fitness score at this local optimum: {}".format(best[1]))
     elif config["mode"] == "best":
-        best = np.load(FileListener.get_best_file_name(file_name, config["size"]))
+        best = np.load(FileListener.get_best_file_name(file_name, config["size"], experiment))
         print("fitness: {}".format(simulation(config, best, render=not config["save_video"])))
     elif config["mode"] == "inflate":
-        listener = FileListener(file_name, config["size"], ["t", "p", "a", "r"])
+        listener = FileListener(file_name, config["size"], ["t", "p", "a", "r"], experiment)
         inflate_simulation(config, listener, render=not config["save_video"])
     else:
         raise ValueError("Invalid mode: {}".format(config["mode"]))
