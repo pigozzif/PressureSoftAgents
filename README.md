@@ -44,7 +44,7 @@ n_masses         | integer                             | 20
 r                | float                               | 10
 size             | string                              | large
 solver           | {cmaes,ga,es}                       | cmaes
-task             | {flat,hilly-1-10,escape}            | escape
+task             | {flat,hilly-1-10,escape,carrier}    | escape
 evaluations      | integer                             | 10000
 mode             | {random,opt-parallel,best,inflate}  | random
 seed             | integer                             | 0
@@ -67,6 +67,16 @@ where {...} denotes a finite and discrete set of possible choices for the corres
 
 ## Bibliography
 Please cite as:
+```
+@article{pigozzi2023pressure,
+  title={Pressure-based soft agents},
+  author={Pigozzi, Federico},
+  journal={Artificial life},
+  pages={1--19},
+  year={2023},
+  publisher={MIT Press One Broadway, 12th Floor, Cambridge, Massachusetts 02142, USA~…}
+}
+```
 ```
 @proceedings{pigozzi2022shape
     author = {Pigozzi, Federico},
