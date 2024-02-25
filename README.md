@@ -1,12 +1,17 @@
 # Pressure-based Soft Agents
 This is the official repository for the *ALIFE'22* (Artificial Life conference, 2022) paper and its *Artificial Life* journal extension
 
+**<a href="[https://arxiv.org/abs/2205.00467](https://direct.mit.edu/artl/article-abstract/doi/10.1162/artl_a_00415/118225/Pressure-Based-Soft-Agents?redirectedFrom=fulltext)">Pressure-based Soft Agents</a>**
+<br>
+<a href="https://pigozzif.github.io">Federico Pigozzi</a>
+<br>
+
 **<a href="https://arxiv.org/abs/2205.00467">Shape Change and Control of Pressure-based Soft Agents</a>**
 <br>
 <a href="https://pigozzif.github.io">Federico Pigozzi</a>
 <br>
 
-hosting all the code for replication. This work was carried out at the Evolutionary Robotics and Artificial Life Lab (ERALLab) at University of Trieste, Italy. More videos available at this [link](https://pressuresoftagents.github.io).
+hosting all the code for replication. More videos available at this [link](https://pressuresoftagents.github.io).
 
 <div align="center">
 <img src="teaser.gif"></img>
