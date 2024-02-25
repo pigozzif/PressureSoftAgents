@@ -1,5 +1,5 @@
 # Pressure-based Soft Agents
-This is the official repository for the ALife'22 (Artificial Life conference, 2022) paper
+This is the official repository for the *ALIFE'22* (Artificial Life conference, 2022) paper and its *Artificial Life* journal extension
 
 **<a href="https://arxiv.org/abs/2205.00467">Shape Change and Control of Pressure-based Soft Agents</a>**
 <br>
